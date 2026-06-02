@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
+    "date-fns": "^4.4.0",
+    "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -17,6 +19,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19",
     "vite": "^5.4.2"
   }
 }

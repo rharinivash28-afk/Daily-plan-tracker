@@ -4,158 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#534AB7" />
-    <title>Habitflow — Build better days</title>
+    <meta name="description" content="Habitflow — build better days, one habit at a time." />
 
-    <!-- Fonts: distinctive display (Fraunces) + refined body (Plus Jakarta Sans) -->
+    <!-- Purple sparkle SVG favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23534AB7'%3E%3Cpath d='M12 2l1.9 5.8L20 9.7l-5.1 3.7L17 19l-5-3.7L7 19l2.1-5.6L4 9.7l6.1-1.9z'/%3E%3C/svg%3E" />
+
+    <!-- Inter via Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <!-- Tailwind CDN with custom token config -->
+    <!-- Apply saved/system theme before paint (no flash) -->
     <script>
-      // Apply saved theme before paint to avoid a flash of the wrong theme.
       (function () {
         try {
-          var t = localStorage.getItem("habitflow.theme");
-          if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-            document.documentElement.classList.add("dark");
-          }
+          var raw = localStorage.getItem("habitflow_data");
+          var dark = false;
+          if (raw) { var d = JSON.parse(raw); dark = d && d.user && d.user.darkMode; }
+          else { dark = window.matchMedia("(prefers-color-scheme: dark)").matches; }
+          if (dark) document.documentElement.classList.add("dark");
         } catch (e) {}
       })();
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      // Themeable colors route through CSS vars so .dark flips them with no component changes.
-      // <alpha-value> lets Tailwind opacity utilities (e.g. text-ink/50) still work.
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              purple: {
-                light: "var(--c-purple-light)",
-                mid: "#7F77DD",
-                dark: "#534AB7",
-              },
-              teal: "#1D9E75",
-              blue: "#378ADD",
-              coral: "#D85A30",
-              amber: "#BA7517",
-              pink: "#D4537E",
-              ink: "rgb(var(--c-ink) / <alpha-value>)",
-              paper: "rgb(var(--c-paper) / <alpha-value>)",
-              white: "rgb(var(--c-surface) / <alpha-value>)",
-            },
-            fontFamily: {
-              display: ['Fraunces', 'Georgia', 'serif'],
-              sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            },
-            borderRadius: {
-              md: "8px",
-              lg: "12px",
-              xl: "18px",
-            },
-          },
-        },
-      };
-    </script>
 
-    <style>
-      :root {
-        --purple-light: #eeedfe;
-        --purple-mid: #7f77dd;
-        --purple-dark: #534ab7;
-        --teal: #1d9e75;
-        --blue: #378add;
-        --coral: #d85a30;
-        --amber: #ba7517;
-        --pink: #d4537e;
-
-        /* Themeable tokens (space-separated RGB for Tailwind alpha support) */
-        --c-ink: 28 26 46;        /* primary text */
-        --c-paper: 251 250 255;   /* page base */
-        --c-surface: 255 255 255; /* cards */
-        --c-purple-light: #eeedfe;
-        --c-border: 28 26 46;     /* card border base, used at low alpha */
-        --page-bg: #fbfaff;
-        --mesh-1: rgba(127,119,221,0.10);
-        --mesh-2: rgba(29,158,117,0.07);
-        --grain-opacity: 0.035;
-      }
-
-      .dark {
-        --c-ink: 233 231 245;     /* light text on dark */
-        --c-paper: 17 16 28;      /* deep indigo-black */
-        --c-surface: 30 28 46;    /* elevated cards */
-        --c-purple-light: #2a2746;
-        --c-border: 233 231 245;
-        --page-bg: #11101c;
-        --mesh-1: rgba(127,119,221,0.18);
-        --mesh-2: rgba(29,158,117,0.12);
-        --grain-opacity: 0.06;
-      }
-
-      html, body, #root { height: 100%; }
-      body {
-        margin: 0;
-        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-        color: rgb(var(--c-ink));
-        background:
-          radial-gradient(1200px 600px at 110% -10%, var(--mesh-1), transparent 60%),
-          radial-gradient(900px 500px at -10% 110%, var(--mesh-2), transparent 55%),
-          var(--page-bg);
-        -webkit-font-smoothing: antialiased;
-        transition: background-color 0.35s ease, color 0.35s ease;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        opacity: var(--grain-opacity);
-        z-index: 0;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      }
-
-      ::-webkit-scrollbar { width: 10px; height: 10px; }
-      ::-webkit-scrollbar-thumb { background: rgba(127,119,221,0.28); border-radius: 8px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(127,119,221,0.45); }
-
-      @keyframes slideIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes pop {
-        0% { transform: scale(1); }
-        45% { transform: scale(1.28); }
-        100% { transform: scale(1); }
-      }
-      @keyframes pulseGlow {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(216,90,48,0.0); }
-        50% { box-shadow: 0 0 0 5px rgba(216,90,48,0.16); }
-      }
-      @keyframes modalIn {
-        from { opacity: 0; transform: scale(0.96) translateY(8px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-      }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-      .anim-slide-in { animation: slideIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
-      .anim-pop { animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-      .anim-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-      .anim-modal-in { animation: modalIn 0.28s cubic-bezier(0.22,1,0.36,1) both; }
-      .anim-fade-in { animation: fadeIn 0.2s ease both; }
-
-      .card-border { border: 0.5px solid rgb(var(--c-border) / 0.14); }
-      .dark .card-border { border-color: rgb(var(--c-border) / 0.12); }
-
-      /* In dark mode, recharts default dark text/grid stays readable */
-      .dark .recharts-cartesian-axis-tick text { fill: rgb(var(--c-ink) / 0.55) !important; }
-    </style>
+    <title>Habitflow — Build better days</title>
   </head>
   <body>
     <div id="root"></div>

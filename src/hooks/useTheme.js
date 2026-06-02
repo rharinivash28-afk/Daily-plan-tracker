@@ -1,24 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
+import { useStore } from "../store/habitStore.jsx";
 
-// Light/dark theme synced to <html class="dark"> and localStorage.
-// The initial class is applied by an inline script in index.html (no flash).
+// Reads darkMode from the store, applies `dark` class to <html>, persists via store.
 export function useTheme() {
-  const [theme, setTheme] = useState(() =>
-    document.documentElement.classList.contains("dark") ? "dark" : "light"
-  );
+  const { state, dispatch } = useStore();
+  const isDark = state.user.darkMode;
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark");
+    if (isDark) root.classList.add("dark");
     else root.classList.remove("dark");
-    try {
-      localStorage.setItem("habitflow.theme", theme);
-    } catch (e) {}
-  }, [theme]);
+  }, [isDark]);
 
   const toggle = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
+    dispatch({ type: "SET_USER", patch: { darkMode: !isDark } });
+  }, [dispatch, isDark]);
 
-  return { theme, toggle, isDark: theme === "dark" };
+  const setDark = useCallback(
+    (val) => dispatch({ type: "SET_USER", patch: { darkMode: !!val } }),
+    [dispatch]
+  );
+
+  return { isDark, toggle, setDark };
 }

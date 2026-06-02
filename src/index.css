@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --card: #FFFFFF;
+  --border: rgba(0,0,0,0.08);
+}
+html.dark {
+  color-scheme: dark;
+  --card: #1A1A1A;
+  --border: rgba(255,255,255,0.08);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #FAFAF9;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html.dark body {
+  background-color: #0F0F0F;
+  color: #F5F5F5;
+}
+
+/* Flat scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(127, 119, 221, 0.25); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(127, 119, 221, 0.4); }
+html.dark ::-webkit-scrollbar-thumb { background: rgba(127, 119, 221, 0.35); }
+
+/* Animated gradient border for 30+ day streaks (the one allowed CSS-only animation) */
+@keyframes streakHue {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.streak-gradient-border {
+  position: relative;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+.streak-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(120deg, #534AB7, #D4537E, #7F77DD, #1D9E75);
+  animation: streakHue 4s linear infinite;
+}
+
+/* Auto-resizing journal textarea baseline */
+textarea.auto-resize {
+  resize: none;
+  overflow: hidden;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

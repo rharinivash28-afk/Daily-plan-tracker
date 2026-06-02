@@ -1,153 +1,140 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import confetti from "canvas-confetti";
-import { Plus, Sparkles, Sun, Moon } from "lucide-react";
+import React, { useState, useCallback, lazy, Suspense } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
+import { StoreProvider } from "./store/habitStore.jsx";
+import { ToastProvider, useToast } from "./hooks/useToast.jsx";
 import { useHabits } from "./hooks/useHabits.js";
 import { useTheme } from "./hooks/useTheme.js";
-import { greeting, formatLong, getToday } from "./utils/dates.js";
 
-import Sidebar from "./components/Sidebar.jsx";
-import TodayView from "./components/TodayView.jsx";
-import CalendarView from "./components/CalendarView.jsx";
-import WeeklyView from "./components/WeeklyView.jsx";
-import AnalyticsView from "./components/AnalyticsView.jsx";
-import StreaksView from "./components/StreaksView.jsx";
-import JournalView from "./components/JournalView.jsx";
-import AddHabitModal from "./components/AddHabitModal.jsx";
-import SettingsModal from "./components/SettingsModal.jsx";
-import { useLocalStorage } from "./hooks/useLocalStorage.js";
+import AppShell from "./components/layout/AppShell.jsx";
+import OnboardingFlow from "./components/views/OnboardingFlow.jsx";
+import TodayView from "./components/views/TodayView.jsx";
+import WeeklyView from "./components/views/WeeklyView.jsx";
+import StreaksView from "./components/views/StreaksView.jsx";
+import SettingsView from "./components/views/SettingsView.jsx";
+import AddHabitModal from "./components/habits/AddHabitModal.jsx";
+import DayCompleteModal from "./components/celebration/DayCompleteModal.jsx";
+import { fireConfetti } from "./components/celebration/ConfettiTrigger.jsx";
+import ToastContainer from "./components/ui/Toast.jsx";
+import Button from "./components/ui/Button.jsx";
+import Modal from "./components/ui/Modal.jsx";
+import { Flame, BookOpen, BarChart2, Settings as SettingsIcon } from "lucide-react";
 
-export default function App() {
-  const store = useHabits();
-  const { addHabit, updateHabit, deleteHabit, today } = store;
-  const { isDark, toggle: toggleTheme } = useTheme();
-  const [name, setName] = useLocalStorage("habitflow.name", "friend");
+// Lazy-loaded heavier views (charts / journal)
+const AnalyticsView = lazy(() => import("./components/views/AnalyticsView.jsx"));
+const JournalView = lazy(() => import("./components/views/JournalView.jsx"));
+
+const fade = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -20 }, transition: { duration: 0.25 } };
+
+function Loading() {
+  return <div className="py-20 text-center text-ink-muted">Loading…</div>;
+}
+
+function MoreMenu({ setView }) {
+  const items = [
+    { id: "streaks", label: "Streaks", icon: Flame },
+    { id: "journal", label: "Journal", icon: BookOpen },
+    { id: "analytics", label: "Analytics", icon: BarChart2 },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
+  ];
+  return (
+    <div className="space-y-3">
+      <h1 className="text-2xl font-bold text-ink dark:text-ink-dark">More</h1>
+      <div className="grid grid-cols-2 gap-3">
+        {items.map(({ id, label, icon: Icon }) => (
+          <button key={id} onClick={() => setView(id)}
+            className="p-5 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark flex flex-col items-center gap-2 text-ink dark:text-ink-dark">
+            <Icon size={24} className="text-purple-600" />
+            <span className="text-sm font-medium">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AppInner() {
+  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle } = useHabits();
+  const toast = useToast();
+  useTheme(); // applies dark class
 
   const [view, setView] = useState("today");
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [toast, setToast] = useState(null); // { habit }
-  const prevAllDone = useRef(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [celebrate, setCelebrate] = useState(null); // { count, streak }
 
-  // Confetti burst when all of today's habits become complete.
-  useEffect(() => {
-    const allDone = today.total > 0 && today.done === today.total;
-    if (allDone && !prevAllDone.current) {
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.7 },
-        colors: ["#7F77DD", "#534AB7", "#1D9E75", "#D85A30", "#D4537E"],
-      });
-    }
-    prevAllDone.current = allDone;
-  }, [today.done, today.total]);
-
-  // Ask for notification permission once (stretch goal).
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      const t = setTimeout(() => { try { Notification.requestPermission(); } catch (e) {} }, 4000);
-      return () => clearTimeout(t);
-    }
-  }, []);
+  const filtered = categoryFilter ? activeHabits.filter((h) => h.category === categoryFilter) : activeHabits;
 
   const openAdd = useCallback(() => { setEditing(null); setModalOpen(true); }, []);
-  const openEdit = useCallback((habit) => { setEditing(habit); setModalOpen(true); }, []);
+  const openEdit = useCallback((h) => { setEditing(h); setModalOpen(true); }, []);
 
   const handleSave = useCallback((data) => {
-    if (editing) updateHabit(editing.id, data);
-    else addHabit(data);
-  }, [editing, addHabit, updateHabit]);
+    if (editing) { updateHabit(editing.id, data); toast.success("Habit updated! ✨"); }
+    else { addHabit(data); toast.success("Habit saved! ✨"); }
+  }, [editing, addHabit, updateHabit, toast]);
 
-  const requestDelete = useCallback((habit) => setToast({ habit }), []);
-  const confirmDelete = useCallback(() => {
-    if (toast) deleteHabit(toast.habit.id);
-    setToast(null);
-  }, [toast, deleteHabit]);
+  const handleToggle = useCallback((id, dateKey) => toggle(id, dateKey), [toggle]);
 
-  const viewProps = { store, onEdit: openEdit, onDelete: requestDelete };
+  const handleDayComplete = useCallback((count, streak) => {
+    fireConfetti();
+    setCelebrate({ count, streak });
+  }, []);
 
-  const renderView = () => {
-    switch (view) {
-      case "today":     return <TodayView {...viewProps} onSelectDate={() => setView("calendar")} />;
-      case "calendar":  return <CalendarView {...viewProps} />;
-      case "weekly":    return <WeeklyView store={store} />;
-      case "analytics": return <AnalyticsView store={store} />;
-      case "streaks":   return <StreaksView store={store} />;
-      case "journal":   return <JournalView />;
-      default:          return <TodayView {...viewProps} onSelectDate={() => setView("calendar")} />;
-    }
-  };
+  if (!user.onboardingDone) return <OnboardingFlow />;
 
   return (
-    <div className="relative flex min-h-screen" style={{ zIndex: 1 }}>
-      <Sidebar active={view} onNavigate={setView} onOpenSettings={() => setSettingsOpen(true)} />
+    <AppShell view={view} setView={setView} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}>
+      <AnimatePresence mode="wait">
+        <motion.div key={view} {...fade}>
+          {view === "today" && (
+            <TodayView
+              habits={filtered} weekStartsOn={user.weekStartsOn} name={user.name}
+              onAdd={openAdd} onEdit={openEdit} onDelete={setConfirmDelete} onArchive={(h) => { archiveHabit(h.id); toast.info("Habit archived."); }}
+              onToggle={handleToggle} onDayComplete={handleDayComplete}
+            />
+          )}
+          {view === "weekly" && <WeeklyView habits={filtered} weekStartsOn={user.weekStartsOn} onToggle={handleToggle} />}
+          {view === "streaks" && <StreaksView habits={filtered} />}
+          {view === "analytics" && <Suspense fallback={<Loading />}><AnalyticsView habits={filtered} /></Suspense>}
+          {view === "journal" && <Suspense fallback={<Loading />}><JournalView onToast={toast} /></Suspense>}
+          {view === "settings" && <SettingsView onToast={toast} />}
+          {view === "more" && <MoreMenu setView={setView} />}
+        </motion.div>
+      </AnimatePresence>
 
-      <main className="flex-1 min-w-0 px-5 sm:px-8 py-6 pb-24 md:pb-8 max-w-5xl mx-auto w-full">
-        {/* Top bar */}
-        <header className="flex flex-wrap items-start justify-between gap-4 mb-7">
-          <div>
-            <h1 className="font-display text-3xl text-ink flex items-center gap-2">
-              {greeting()}, {name}
-              <Sparkles size={22} className="text-purple-mid" />
-            </h1>
-            <p className="text-sm text-ink/55 mt-1">
-              {formatLong(getToday())} · {today.total - today.done} of {today.total} habits pending
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={toggleTheme}
-              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-              title={isDark ? "Light mode" : "Dark mode"}
-              className="w-11 h-11 grid place-items-center rounded-md card-border bg-white/70 backdrop-blur text-ink/70 hover:text-ink hover:bg-white transition-colors"
-            >
-              {isDark ? <Sun size={19} /> : <Moon size={19} />}
-            </button>
-            <button
-              onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-semibold text-white transition-transform hover:scale-[1.02]"
-              style={{ background: "linear-gradient(135deg,#7F77DD,#534AB7)" }}
-            >
-              <Plus size={18} /> Add habit
-            </button>
-          </div>
-        </header>
-
-        {renderView()}
-      </main>
-
-      <AddHabitModal
-        open={modalOpen}
-        editing={editing}
-        onClose={() => setModalOpen(false)}
-        onSave={handleSave}
+      {/* day-complete overlay lives in content area (absolute) */}
+      <DayCompleteModal
+        open={!!celebrate} count={celebrate?.count || 0} streak={celebrate?.streak || 0}
+        onClose={() => setCelebrate(null)}
       />
 
-      <SettingsModal
-        open={settingsOpen}
-        name={name}
-        onClose={() => setSettingsOpen(false)}
-        onSave={setName}
-      />
+      <AddHabitModal open={modalOpen} editing={editing} onClose={() => setModalOpen(false)} onSave={handleSave} onToast={toast} />
 
-      {/* Delete confirmation toast */}
-      {toast && (
-        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-50 anim-slide-in">
-          <div className="card-border bg-white rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg">
-            <span className="text-sm text-ink/80">
-              Delete <span className="font-semibold">{toast.habit.name}</span>?
-            </span>
-            <button onClick={() => setToast(null)} className="px-3 py-1.5 rounded-md text-sm card-border text-ink/60 hover:bg-ink/5">
-              Cancel
-            </button>
-            <button onClick={confirmDelete} className="px-3 py-1.5 rounded-md text-sm font-semibold text-white bg-coral">
-              Delete
-            </button>
+      {/* delete confirm */}
+      <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidth="380px">
+        <div className="p-5">
+          <h3 className="text-lg font-semibold text-ink dark:text-ink-dark">Are you sure?</h3>
+          <p className="text-sm text-ink-muted mt-1.5">This will remove <b>{confirmDelete?.name}</b> and all its history.</p>
+          <div className="flex justify-end gap-2 mt-5">
+            <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+            <Button variant="danger" onClick={() => { deleteHabit(confirmDelete.id); toast.info("Habit deleted."); setConfirmDelete(null); }}>Delete</Button>
           </div>
         </div>
-      )}
-    </div>
+      </Modal>
+
+      <ToastContainer />
+    </AppShell>
+  );
+}
+
+export default function App() {
+  return (
+    <StoreProvider>
+      <ToastProvider>
+        <AppInner />
+      </ToastProvider>
+    </StoreProvider>
   );
 }
