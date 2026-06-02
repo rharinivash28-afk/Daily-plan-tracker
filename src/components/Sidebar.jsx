@@ -7,7 +7,7 @@ import { NAV_ITEMS, CATEGORIES, CATEGORY_NAMES } from "../utils/constants.js";
 
 const ICONS = { LayoutDashboard, CalendarDays, CalendarRange, BarChart3, Flame, NotebookPen };
 
-export default function Sidebar({ active, onNavigate }) {
+export default function Sidebar({ active, onNavigate, onOpenSettings }) {
   return (
     <>
       {/* Desktop sidebar */}
@@ -52,7 +52,10 @@ export default function Sidebar({ active, onNavigate }) {
           ))}
         </ul>
 
-        <button className="mt-auto flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-ink/55 hover:bg-ink/5 hover:text-ink transition-colors">
+        <button
+          onClick={onOpenSettings}
+          className="mt-auto flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-ink/55 hover:bg-ink/5 hover:text-ink transition-colors"
+        >
           <Settings size={18} />
           Settings
         </button>

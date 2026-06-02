@@ -14,15 +14,17 @@ import AnalyticsView from "./components/AnalyticsView.jsx";
 import StreaksView from "./components/StreaksView.jsx";
 import JournalView from "./components/JournalView.jsx";
 import AddHabitModal from "./components/AddHabitModal.jsx";
-
-const NAME = "Harini";
+import SettingsModal from "./components/SettingsModal.jsx";
+import { useLocalStorage } from "./hooks/useLocalStorage.js";
 
 export default function App() {
   const store = useHabits();
   const { addHabit, updateHabit, deleteHabit, today } = store;
   const { isDark, toggle: toggleTheme } = useTheme();
+  const [name, setName] = useLocalStorage("habitflow.name", "friend");
 
   const [view, setView] = useState("today");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null); // { habit }
@@ -80,14 +82,14 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-screen" style={{ zIndex: 1 }}>
-      <Sidebar active={view} onNavigate={setView} />
+      <Sidebar active={view} onNavigate={setView} onOpenSettings={() => setSettingsOpen(true)} />
 
       <main className="flex-1 min-w-0 px-5 sm:px-8 py-6 pb-24 md:pb-8 max-w-5xl mx-auto w-full">
         {/* Top bar */}
         <header className="flex flex-wrap items-start justify-between gap-4 mb-7">
           <div>
             <h1 className="font-display text-3xl text-ink flex items-center gap-2">
-              {greeting()}, {NAME}
+              {greeting()}, {name}
               <Sparkles size={22} className="text-purple-mid" />
             </h1>
             <p className="text-sm text-ink/55 mt-1">
@@ -121,6 +123,13 @@ export default function App() {
         editing={editing}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <SettingsModal
+        open={settingsOpen}
+        name={name}
+        onClose={() => setSettingsOpen(false)}
+        onSave={setName}
       />
 
       {/* Delete confirmation toast */}
