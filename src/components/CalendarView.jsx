@@ -113,7 +113,7 @@ export default function CalendarView({ store, onEdit, onDelete }) {
                 className={`relative aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all hover:scale-[1.04] hover:ring-2 hover:ring-purple-mid/40 ${
                   cell.inMonth ? "text-ink" : "text-ink/25"
                 } ${isToday ? "ring-2 ring-purple-dark" : "card-border"}`}
-                style={fill ? { background: fill, color: "#fff" } : { background: cell.inMonth ? "#fff" : "transparent" }}
+                style={fill ? { background: fill, color: "#fff" } : { background: cell.inMonth ? "rgb(var(--c-surface))" : "transparent" }}
               >
                 <span className={`font-semibold ${isToday && !fill ? "text-purple-dark" : ""}`}>{dayNum}</span>
                 {total > 0 && (

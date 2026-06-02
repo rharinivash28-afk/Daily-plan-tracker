@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Sun, Moon } from "lucide-react";
 
 import { useHabits } from "./hooks/useHabits.js";
+import { useTheme } from "./hooks/useTheme.js";
 import { greeting, formatLong, getToday } from "./utils/dates.js";
 
 import Sidebar from "./components/Sidebar.jsx";
@@ -19,6 +20,7 @@ const NAME = "Harini";
 export default function App() {
   const store = useHabits();
   const { addHabit, updateHabit, deleteHabit, today } = store;
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   const [view, setView] = useState("today");
   const [modalOpen, setModalOpen] = useState(false);
@@ -92,13 +94,23 @@ export default function App() {
               {formatLong(getToday())} · {today.total - today.done} of {today.total} habits pending
             </p>
           </div>
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-md font-semibold text-white shrink-0 transition-transform hover:scale-[1.02]"
-            style={{ background: "linear-gradient(135deg,#7F77DD,#534AB7)" }}
-          >
-            <Plus size={18} /> Add habit
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={toggleTheme}
+              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+              title={isDark ? "Light mode" : "Dark mode"}
+              className="w-11 h-11 grid place-items-center rounded-md card-border bg-white/70 backdrop-blur text-ink/70 hover:text-ink hover:bg-white transition-colors"
+            >
+              {isDark ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-md font-semibold text-white transition-transform hover:scale-[1.02]"
+              style={{ background: "linear-gradient(135deg,#7F77DD,#534AB7)" }}
+            >
+              <Plus size={18} /> Add habit
+            </button>
+          </div>
         </header>
 
         {renderView()}
