@@ -1,7 +1,7 @@
 import React, { useState, useCallback, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { StoreProvider, useStore } from "./store/habitStore.jsx";
+import { StoreProvider } from "./store/habitStore.jsx";
 import { ToastProvider, useToast } from "./hooks/useToast.jsx";
 import { useHabits } from "./hooks/useHabits.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -16,15 +16,13 @@ import AddHabitModal from "./components/habits/AddHabitModal.jsx";
 import DayCompleteModal from "./components/celebration/DayCompleteModal.jsx";
 import { fireConfetti } from "./components/celebration/ConfettiTrigger.jsx";
 import ToastContainer from "./components/ui/Toast.jsx";
-import Fab from "./components/ui/Fab.jsx";
 import Button from "./components/ui/Button.jsx";
 import Modal from "./components/ui/Modal.jsx";
-import { Flame, BookOpen, BarChart2, CalendarDays, Settings as SettingsIcon } from "lucide-react";
+import { Flame, BookOpen, BarChart2, Settings as SettingsIcon } from "lucide-react";
 
-// Lazy-loaded heavier views (charts / journal / calendar)
+// Lazy-loaded heavier views (charts / journal)
 const AnalyticsView = lazy(() => import("./components/views/AnalyticsView.jsx"));
 const JournalView = lazy(() => import("./components/views/JournalView.jsx"));
-const CalendarView = lazy(() => import("./components/views/CalendarView.jsx"));
 
 const fade = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -20 }, transition: { duration: 0.25 } };
 
@@ -34,7 +32,6 @@ function Loading() {
 
 function MoreMenu({ setView }) {
   const items = [
-    { id: "calendar", label: "Calendar", icon: CalendarDays },
     { id: "streaks", label: "Streaks", icon: Flame },
     { id: "journal", label: "Journal", icon: BookOpen },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
@@ -57,8 +54,7 @@ function MoreMenu({ setView }) {
 }
 
 function AppInner() {
-  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setValue } = useHabits();
-  const { state } = useStore();
+  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle } = useHabits();
   const toast = useToast();
   useTheme(); // applies dark class
 
@@ -75,13 +71,11 @@ function AppInner() {
   const openEdit = useCallback((h) => { setEditing(h); setModalOpen(true); }, []);
 
   const handleSave = useCallback((data) => {
-    if (editing) { updateHabit(editing.id, data); toast.success("Tracker updated! ✨"); }
-    else { addHabit(data); toast.success("Tracker added! ✨"); }
+    if (editing) { updateHabit(editing.id, data); toast.success("Habit updated! ✨"); }
+    else { addHabit(data); toast.success("Habit saved! ✨"); }
   }, [editing, addHabit, updateHabit, toast]);
 
   const handleToggle = useCallback((id, dateKey) => toggle(id, dateKey), [toggle]);
-  const handleSetValue = useCallback((id, value, dateKey) => setValue(id, value, dateKey), [setValue]);
-  const handleArchive = useCallback((h) => { archiveHabit(h.id); toast.info("Tracker archived."); }, [archiveHabit, toast]);
 
   const handleDayComplete = useCallback((count, streak) => {
     fireConfetti();
@@ -90,26 +84,16 @@ function AppInner() {
 
   if (!user.onboardingDone) return <OnboardingFlow />;
 
-  const cardProps = {
-    habits: filtered, weekStartsOn: user.weekStartsOn,
-    onToggle: handleToggle, onSetValue: handleSetValue,
-    onEdit: openEdit, onDelete: setConfirmDelete, onArchive: handleArchive,
-  };
-
   return (
     <AppShell view={view} setView={setView} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}>
       <AnimatePresence mode="wait">
         <motion.div key={view} {...fade}>
           {view === "today" && (
             <TodayView
-              {...cardProps} name={user.name}
-              onAdd={openAdd} onDayComplete={handleDayComplete}
+              habits={filtered} weekStartsOn={user.weekStartsOn} name={user.name}
+              onAdd={openAdd} onEdit={openEdit} onDelete={setConfirmDelete} onArchive={(h) => { archiveHabit(h.id); toast.info("Habit archived."); }}
+              onToggle={handleToggle} onDayComplete={handleDayComplete}
             />
-          )}
-          {view === "calendar" && (
-            <Suspense fallback={<Loading />}>
-              <CalendarView {...cardProps} journal={state.journal} onAdd={openAdd} />
-            </Suspense>
           )}
           {view === "weekly" && <WeeklyView habits={filtered} weekStartsOn={user.weekStartsOn} onToggle={handleToggle} />}
           {view === "streaks" && <StreaksView habits={filtered} />}
@@ -119,9 +103,6 @@ function AppInner() {
           {view === "more" && <MoreMenu setView={setView} />}
         </motion.div>
       </AnimatePresence>
-
-      {/* FAB — present on every view */}
-      <Fab onClick={openAdd} />
 
       {/* day-complete overlay lives in content area (absolute) */}
       <DayCompleteModal
@@ -138,7 +119,7 @@ function AppInner() {
           <p className="text-sm text-ink-muted mt-1.5">This will remove <b>{confirmDelete?.name}</b> and all its history.</p>
           <div className="flex justify-end gap-2 mt-5">
             <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Cancel</Button>
-            <Button variant="danger" onClick={() => { deleteHabit(confirmDelete.id); toast.info("Tracker deleted."); setConfirmDelete(null); }}>Delete</Button>
+            <Button variant="danger" onClick={() => { deleteHabit(confirmDelete.id); toast.info("Habit deleted."); setConfirmDelete(null); }}>Delete</Button>
           </div>
         </div>
       </Modal>

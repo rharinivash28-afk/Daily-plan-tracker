@@ -1,14 +1,13 @@
 import React from "react";
 import {
-  Sparkles, LayoutDashboard, CalendarDays, CalendarRange, BarChart2, Flame, BookOpen, Settings,
+  Sparkles, LayoutDashboard, CalendarDays, BarChart2, Flame, BookOpen, Settings,
 } from "lucide-react";
 import { CATEGORIES, CATEGORY_KEYS } from "../../utils/colors.js";
 import { useHabits } from "../../hooks/useHabits.js";
 
 const NAV = [
   { id: "today", label: "Today", icon: LayoutDashboard },
-  { id: "calendar", label: "Calendar", icon: CalendarDays },
-  { id: "weekly", label: "Weekly", icon: CalendarRange },
+  { id: "weekly", label: "Weekly", icon: CalendarDays },
   { id: "analytics", label: "Analytics", icon: BarChart2 },
   { id: "streaks", label: "Streaks", icon: Flame },
   { id: "journal", label: "Journal", icon: BookOpen },

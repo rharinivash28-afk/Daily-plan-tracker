@@ -15,7 +15,7 @@ export default function BottomNav({ view, setView }) {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {TABS.map(({ id, label, icon: Icon }) => {
-        const on = view === id || (id === "more" && ["calendar", "streaks", "journal", "settings"].includes(view));
+        const on = view === id || (id === "more" && ["streaks", "journal", "settings"].includes(view));
         return (
           <button
             key={id}

@@ -23,11 +23,11 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // merge + normalize to tolerate older/partial shapes
+      // merge to tolerate older/partial shapes
       return {
         user: { ...emptyState().user, ...(parsed.user || {}) },
-        habits: Array.isArray(parsed.habits) ? parsed.habits.map(makeHabit) : [],
-        journal: parsed.journal && typeof parsed.journal === "object" ? parsed.journal : {},
+        habits: parsed.habits || [],
+        journal: parsed.journal || {},
       };
     }
   } catch (e) {}
@@ -40,11 +40,42 @@ function reducer(state, action) {
       return { ...state, user: { ...state.user, ...action.patch } };
 
     case "ADD_HABIT": {
-      return { ...state, habits: [...state.habits, makeHabit(action.habit)] };
+      const h = action.habit;
+      return {
+        ...state,
+        habits: [
+          ...state.habits,
+          {
+            id: uuid(),
+            name: (h.name || "Untitled").trim(),
+            emoji: h.emoji || "🎯",
+            category: h.category || "health",
+            frequency: h.frequency || "daily",
+            customDays: h.customDays || [],
+            duration: h.duration || "",
+            reminderTime: h.reminderTime || "",
+            completions: {},
+            createdAt: new Date().toISOString(),
+            archived: false,
+          },
+        ],
+      };
     }
 
     case "ADD_HABITS": {
-      const created = action.habits.map(makeHabit);
+      const created = action.habits.map((h) => ({
+        id: uuid(),
+        name: (h.name || "Untitled").trim(),
+        emoji: h.emoji || "🎯",
+        category: h.category || "health",
+        frequency: h.frequency || "daily",
+        customDays: h.customDays || [],
+        duration: h.duration || "",
+        reminderTime: h.reminderTime || "",
+        completions: {},
+        createdAt: new Date().toISOString(),
+        archived: false,
+      }));
       return { ...state, habits: [...state.habits, ...created] };
     }
 
@@ -53,7 +84,7 @@ function reducer(state, action) {
         ...state,
         habits: state.habits.map((h) =>
           h.id === action.id
-            ? { ...h, ...action.patch, id: h.id, completions: h.completions, values: h.values, createdAt: h.createdAt }
+            ? { ...h, ...action.patch, id: h.id, completions: h.completions, createdAt: h.createdAt }
             : h
         ),
       };
@@ -81,81 +112,25 @@ function reducer(state, action) {
       };
     }
 
-    // Set a typed value for a date (numeric/mood/notes). Completion is derived.
-    case "SET_VALUE": {
-      const { id, dateKey, value } = action;
-      return {
-        ...state,
-        habits: state.habits.map((h) => {
-          if (h.id !== id) return h;
-          const values = { ...(h.values || {}) };
-          const completions = { ...(h.completions || {}) };
-          const empty = value === "" || value === null || value === undefined;
-          if (empty) { delete values[dateKey]; delete completions[dateKey]; }
-          else {
-            values[dateKey] = value;
-            // derive completion: numeric meets target; mood/notes -> any value counts
-            if (h.type === "numeric") {
-              completions[dateKey] = Number(value) >= Number(h.target || 1);
-              if (!completions[dateKey]) delete completions[dateKey];
-            } else {
-              completions[dateKey] = true;
-            }
-          }
-          return { ...h, values, completions };
-        }),
-      };
-    }
-
     case "SET_JOURNAL":
       return {
         ...state,
         journal: { ...state.journal, [action.dateKey]: action.entry },
       };
 
-    case "IMPORT": {
-      const d = action.data || {};
-      // Validate basic shape; ignore garbage. Keep onboarding done so we don't trap the user.
-      if (!d || typeof d !== "object" || !Array.isArray(d.habits)) return state;
+    case "IMPORT":
       return {
-        user: { ...emptyState().user, ...(d.user || {}), onboardingDone: true },
-        habits: d.habits.map(makeHabit),
-        journal: d.journal && typeof d.journal === "object" ? d.journal : {},
+        user: { ...emptyState().user, ...(action.data.user || {}) },
+        habits: action.data.habits || [],
+        journal: action.data.journal || {},
       };
-    }
 
     case "RESET":
-      // Reset data but keep the user past onboarding (and their name/theme prefs).
-      return {
-        user: { ...emptyState().user, name: state.user.name, darkMode: state.user.darkMode, weekStartsOn: state.user.weekStartsOn, onboardingDone: true },
-        habits: [],
-        journal: {},
-      };
+      return emptyState();
 
     default:
       return state;
   }
-}
-
-// Normalizes any habit-ish object into the full schema (backward compatible).
-function makeHabit(h = {}) {
-  return {
-    id: h.id || uuid(),
-    name: (h.name || "Untitled").trim(),
-    emoji: h.emoji || "🎯",
-    category: h.category || "health",
-    type: h.type || "boolean", // boolean | numeric | mood | notes
-    target: h.target ?? "",     // numeric goal
-    unit: h.unit || "",         // numeric unit label
-    frequency: h.frequency || "daily",
-    customDays: h.customDays || [],
-    duration: h.duration || "",
-    reminderTime: h.reminderTime || "",
-    completions: h.completions && typeof h.completions === "object" ? h.completions : {},
-    values: h.values && typeof h.values === "object" ? h.values : {},
-    createdAt: h.createdAt || new Date().toISOString(),
-    archived: !!h.archived,
-  };
 }
 
 const StoreContext = createContext(null);
