@@ -17,9 +17,13 @@ export function useHabits() {
     (id, dateKey = todayKey()) => dispatch({ type: "TOGGLE_COMPLETION", id, dateKey }),
     [dispatch]
   );
+  const setValue = useCallback(
+    (id, value, dateKey = todayKey()) => dispatch({ type: "SET_VALUE", id, dateKey, value }),
+    [dispatch]
+  );
 
   return {
     habits, activeHabits, user: state.user,
-    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle,
+    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle, setValue,
   };
 }

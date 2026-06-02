@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MoreVertical, Pencil, Trash2, Archive } from "lucide-react";
 import HabitDots from "./HabitDots.jsx";
-import HabitCheckButton from "./HabitCheckButton.jsx";
+import TrackerControl from "./TrackerControl.jsx";
 import StreakBadge from "../ui/StreakBadge.jsx";
 import { catColors, CATEGORIES } from "../../utils/colors.js";
 import { isCompletedOn } from "../../utils/streakLogic.js";
@@ -10,11 +10,12 @@ import { useStreak } from "../../hooks/useStreak.js";
 import { useTheme } from "../../hooks/useTheme.js";
 import { fromKey } from "../../utils/dates.js";
 
-export default function HabitCard({ habit, dateKey, onToggle, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
+export default function HabitCard({ habit, dateKey, onToggle, onSetValue, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
   const { isDark } = useTheme();
   const c = catColors(habit.category, isDark);
   const { current: streak } = useStreak(habit);
   const done = isCompletedOn(habit, fromKey(dateKey));
+  const dayValue = (habit.values || {})[dateKey];
   const [menu, setMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -50,7 +51,9 @@ export default function HabitCard({ habit, dateKey, onToggle, onEdit, onDelete, 
           </span>
         </div>
         <div className="text-xs text-ink-muted mt-0.5 truncate">
-          {CATEGORIES[habit.category]?.label}{habit.duration ? ` · ${habit.duration}` : ""}
+          {CATEGORIES[habit.category]?.label}
+          {habit.type === "numeric" && habit.target ? ` · goal ${habit.target}${habit.unit ? " " + habit.unit : ""}` : ""}
+          {habit.duration ? ` · ${habit.duration}` : ""}
         </div>
         <div className="mt-2 hidden sm:block">
           <HabitDots habit={habit} weekStartsOn={weekStartsOn} />
@@ -86,7 +89,10 @@ export default function HabitCard({ habit, dateKey, onToggle, onEdit, onDelete, 
         )}
       </div>
 
-      <HabitCheckButton done={done} onClick={() => onToggle(habit.id, dateKey)} />
+      <TrackerControl
+        habit={habit} dateKey={dateKey} value={dayValue} done={done}
+        onToggle={onToggle} onSetValue={onSetValue}
+      />
     </motion.div>
   );
 }
