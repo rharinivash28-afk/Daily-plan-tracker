@@ -14,7 +14,7 @@ export default function HabitCheckButton({ done, onClick }) {
       className="w-10 h-10 rounded-full grid place-items-center border-2 shrink-0 transition-colors"
       style={
         done
-          ? { background: "#534AB7", borderColor: "#534AB7" }
+          ? { background: "var(--accent)", borderColor: "var(--accent)" }
           : { background: "transparent", borderColor: "rgba(0,0,0,0.18)" }
       }
     >

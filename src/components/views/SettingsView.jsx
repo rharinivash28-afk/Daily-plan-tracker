@@ -1,12 +1,13 @@
-import React, { useState } from "react";
-import { Sun, Moon, Sparkles, Heart, Plus, Pencil, Trash2, ArchiveRestore, Check, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Sun, Moon, Sparkles, Heart, Plus, Pencil, Trash2, ArchiveRestore, Check, X, Bell } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import { useStore } from "../../store/habitStore.jsx";
 import { useTheme } from "../../hooks/useTheme.js";
 import { useHabits } from "../../hooks/useHabits.js";
+import { requestNotificationPermission } from "../../hooks/useReminders.js";
 import { allCategories, BUILTIN_KEYS, catColors } from "../../utils/colors.js";
 
-const VERSION = "2.1.0";
+const VERSION = "2.2.0";
 const ACCENTS = ["#534AB7", "#1D9E75", "#378ADD", "#D85A30", "#BA7517", "#D4537E"];
 
 function Section({ title, children }) {
@@ -25,6 +26,20 @@ export default function SettingsView({ onToast, onAddCategory }) {
   const [name, setName] = useState(state.user.name);
   const [editingCat, setEditingCat] = useState(null); // key being renamed
   const [catDraft, setCatDraft] = useState("");
+  const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+
+  const enableReminders = async () => {
+    const p = await requestNotificationPermission();
+    setPerm(p);
+    if (p === "granted") {
+      setUser({ remindersEnabled: true });
+      onToast && onToast.success("Reminders on! ✨");
+      try { new Notification("Habitflow ✨", { body: "Reminders are on. We'll nudge you at your set time." }); } catch (e) {}
+    } else if (p === "denied") {
+      onToast && onToast.error("Notifications blocked in your browser settings.");
+    }
+  };
+  const disableReminders = () => { setUser({ remindersEnabled: false }); onToast && onToast.info("Reminders off."); };
 
   const customCats = allCategories().filter((c) => !BUILTIN_KEYS.includes(c.key));
   const archived = habits.filter((h) => h.archived);
@@ -61,9 +76,24 @@ export default function SettingsView({ onToast, onAddCategory }) {
           </div>
         </div>
         <div className="flex items-center justify-between py-1 mt-2">
-          <span className="text-sm text-ink dark:text-ink-dark">Default reminder</span>
+          <span className="text-sm text-ink dark:text-ink-dark flex items-center gap-2"><Bell size={15} /> Daily reminder</span>
           <input type="time" value={state.user.reminderTime} onChange={(e) => dispatch({ type: "SET_USER", patch: { reminderTime: e.target.value } })}
             className="px-3 py-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark text-sm" />
+        </div>
+        <div className="mt-2">
+          {perm === "unsupported" ? (
+            <p className="text-xs text-ink-muted">Your browser doesn't support notifications.</p>
+          ) : state.user.remindersEnabled && perm === "granted" ? (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#1D9E75] font-medium">✓ Reminders on</span>
+              <button onClick={disableReminders} className="text-xs font-medium text-ink-muted hover:text-ink dark:hover:text-ink-dark underline">Turn off</button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={enableReminders}><Bell size={14} /> Enable notifications</Button>
+          )}
+          <p className="text-[11px] text-ink-hint mt-1.5 leading-relaxed">
+            Reminders nudge you at your set time about unfinished habits. They only fire while Habitflow is open in a browser tab.
+          </p>
         </div>
       </Section>
 

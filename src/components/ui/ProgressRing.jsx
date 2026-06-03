@@ -17,7 +17,7 @@ export default function ProgressRing({ pct = 0, size = 132, stroke = 12, label =
         />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="#534AB7" strokeWidth={stroke} strokeLinecap="round"
+          stroke="var(--accent)" strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={circ}
           initial={{ strokeDashoffset: circ }}
           animate={{ strokeDashoffset: offset }}

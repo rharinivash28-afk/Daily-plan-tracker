@@ -6,12 +6,27 @@
   color-scheme: light;
   --card: #FFFFFF;
   --border: rgba(0,0,0,0.08);
+  /* Accent (overridden at runtime from Settings) */
+  --accent: #534AB7;
+  --accent-rgb: 83 74 183;
+  --accent-dark: #443c97;
+  --accent-soft: rgba(83,74,183,0.12);
 }
 html.dark {
   color-scheme: dark;
   --card: #1A1A1A;
   --border: rgba(255,255,255,0.08);
 }
+
+/* Accent-driven utilities — recolor with the chosen accent */
+.bg-accent { background-color: var(--accent); }
+.bg-accent:hover { background-color: var(--accent-dark); }
+.text-accent { color: var(--accent); }
+.border-accent { border-color: var(--accent); }
+.bg-accent-soft { background-color: var(--accent-soft); }
+.ring-accent { --tw-ring-color: var(--accent); }
+.accent-stroke { stroke: var(--accent); }
+.hover-accent-soft:hover { background-color: var(--accent-soft); }
 
 html, body, #root {
   height: 100%;

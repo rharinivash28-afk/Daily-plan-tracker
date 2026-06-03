@@ -2,8 +2,8 @@ import React from "react";
 import { motion } from "framer-motion";
 
 const variants = {
-  primary: "bg-purple-600 text-white hover:bg-purple-800",
-  outline: "border border-purple-600 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30",
+  primary: "bg-accent text-white",
+  outline: "border border-accent text-accent hover-accent-soft",
   ghost: "text-ink-muted hover:bg-black/5 dark:text-ink-dark dark:hover:bg-white/10",
   danger: "bg-[#D85A30] text-white hover:opacity-90",
 };

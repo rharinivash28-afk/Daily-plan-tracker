@@ -20,7 +20,7 @@ export default function BottomNav({ view, setView }) {
           <button
             key={id}
             onClick={() => setView(id)}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] ${on ? "text-purple-600" : "text-ink-hint"}`}
+            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] ${on ? "text-accent" : "text-ink-hint"}`}
           >
             <Icon size={22} /> {label}
           </button>

@@ -13,6 +13,7 @@ const emptyState = () => ({
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : false,
     reminderTime: "08:00",
+    remindersEnabled: false,
     accent: "#534AB7",
     textSize: "normal", // "normal" | "large"
     categories: {},     // custom: key -> { label, dot, bg, text, darkBg, darkText }
@@ -21,6 +22,18 @@ const emptyState = () => ({
   habits: [],
   journal: {},
 });
+
+// Color helpers for the accent variable.
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function shade(hex, amt) {
+  const { r, g, b } = hexToRgb(hex);
+  const f = (c) => Math.max(0, Math.min(255, Math.round(c + c * amt)));
+  return `#${[f(r), f(g), f(b)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
 
 // Build a custom-category object from a name + palette index.
 function makeCategory(name, paletteIndex = 0) {
@@ -251,7 +264,13 @@ export function StoreProvider({ children }) {
   // Apply appearance (accent + text size) to CSS vars.
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--accent", state.user.accent || "#534AB7");
+    const accent = state.user.accent || "#534AB7";
+    root.style.setProperty("--accent", accent);
+    // derive a darker shade (hover) and a soft tint (light backgrounds)
+    const { r, g, b } = hexToRgb(accent);
+    root.style.setProperty("--accent-rgb", `${r} ${g} ${b}`);
+    root.style.setProperty("--accent-dark", shade(accent, -0.18));
+    root.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.12)`);
     root.style.fontSize = state.user.textSize === "large" ? "17px" : "16px";
   }, [state.user.accent, state.user.textSize]);
 

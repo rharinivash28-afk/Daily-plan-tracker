@@ -5,6 +5,7 @@ import { StoreProvider, useStore } from "./store/habitStore.jsx";
 import { ToastProvider, useToast } from "./hooks/useToast.jsx";
 import { useHabits } from "./hooks/useHabits.js";
 import { useTheme } from "./hooks/useTheme.js";
+import { useReminders } from "./hooks/useReminders.js";
 
 import AppShell from "./components/layout/AppShell.jsx";
 import OnboardingFlow from "./components/views/OnboardingFlow.jsx";
@@ -61,6 +62,7 @@ function AppInner() {
   const { state } = useStore();
   const toast = useToast();
   useTheme(); // applies dark class
+  useReminders(); // daily habit reminder while app is open
 
   const [view, setView] = useState("today");
   const [categoryFilter, setCategoryFilter] = useState(null);
