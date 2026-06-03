@@ -27,6 +27,10 @@ export function useHabits() {
     (id, time, dateKey = todayKey()) => dispatch({ type: "SET_ACTUAL_TIME", id, dateKey, time }),
     [dispatch]
   );
+  const setValue = useCallback(
+    (id, value, dateKey = todayKey()) => dispatch({ type: "SET_VALUE", id, dateKey, value }),
+    [dispatch]
+  );
   const addCategory = useCallback((name, paletteIndex) => dispatch({ type: "ADD_CATEGORY", name, paletteIndex }), [dispatch]);
   const renameCategory = useCallback((key, name) => dispatch({ type: "RENAME_CATEGORY", key, name }), [dispatch]);
   const deleteCategory = useCallback((key) => dispatch({ type: "DELETE_CATEGORY", key }), [dispatch]);
@@ -34,7 +38,7 @@ export function useHabits() {
 
   return {
     habits, activeHabits, user: state.user,
-    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime,
+    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime, setValue,
     addCategory, renameCategory, deleteCategory, setUser,
   };
 }

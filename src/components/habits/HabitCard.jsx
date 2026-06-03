@@ -11,7 +11,7 @@ import { useStreak } from "../../hooks/useStreak.js";
 import { useTheme } from "../../hooks/useTheme.js";
 import { fromKey } from "../../utils/dates.js";
 
-export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSetActual, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
+export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSetActual, onSetValue, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
   const { isDark } = useTheme();
   const c = catColors(habit.category, isDark);
   const { current: streak } = useStreak(habit);
@@ -55,7 +55,7 @@ export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSet
         </div>
         <TimeControl
           habit={habit} dateKey={dateKey} done={done}
-          onSetTarget={onSetTarget} onSetActual={onSetActual}
+          onSetTarget={onSetTarget} onSetActual={onSetActual} onSetValue={onSetValue}
         />
         <div className="mt-2 hidden sm:block">
           <HabitDots habit={habit} weekStartsOn={weekStartsOn} />

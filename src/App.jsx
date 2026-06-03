@@ -57,7 +57,7 @@ function MoreMenu({ setView }) {
 }
 
 function AppInner() {
-  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime, addCategory } = useHabits();
+  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime, setValue, addCategory } = useHabits();
   const { state } = useStore();
   const toast = useToast();
   useTheme(); // applies dark class
@@ -83,6 +83,7 @@ function AppInner() {
   const handleToggle = useCallback((id, dateKey) => toggle(id, dateKey), [toggle]);
   const handleSetTarget = useCallback((id, time) => updateHabit(id, { targetTime: time }), [updateHabit]);
   const handleSetActual = useCallback((id, time, dateKey) => setActualTime(id, time, dateKey), [setActualTime]);
+  const handleSetValue = useCallback((id, value, dateKey) => setValue(id, value, dateKey), [setValue]);
 
   const handleDayComplete = useCallback((count, streak) => {
     fireConfetti();
@@ -92,7 +93,7 @@ function AppInner() {
   if (!user.onboardingDone) return <OnboardingFlow />;
 
   const cardHandlers = {
-    onToggle: handleToggle, onSetTarget: handleSetTarget, onSetActual: handleSetActual,
+    onToggle: handleToggle, onSetTarget: handleSetTarget, onSetActual: handleSetActual, onSetValue: handleSetValue,
     onEdit: openEdit, onDelete: setConfirmDelete,
     onArchive: (h) => { archiveHabit(h.id); toast.info("Habit archived."); },
   };

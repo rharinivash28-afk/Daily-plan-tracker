@@ -8,7 +8,7 @@ import { isHabitScheduledOn, dayCompletion } from "../../utils/streakLogic.js";
 const MOODS = ["😔", "😐", "🙂", "😊", "🤩"];
 
 // One day's full plan. Used inside the calendar side panel AND the full-screen view.
-export default function DayPlanPanel({ dateKey, habits, weekStartsOn, journal, onToggle, onSetTarget, onSetActual, onEdit, onDelete, onArchive, onAdd }) {
+export default function DayPlanPanel({ dateKey, habits, weekStartsOn, journal, onToggle, onSetTarget, onSetActual, onSetValue, onEdit, onDelete, onArchive, onAdd }) {
   const date = fromKey(dateKey);
   const due = habits.filter((h) => !h.archived && isHabitScheduledOn(h, date));
   const { done, total, pct } = dayCompletion(habits, date);
@@ -41,7 +41,7 @@ export default function DayPlanPanel({ dateKey, habits, weekStartsOn, journal, o
           {due.map((h) => (
             <HabitCard
               key={h.id} habit={h} dateKey={dateKey} weekStartsOn={weekStartsOn}
-              onToggle={onToggle} onSetTarget={onSetTarget} onSetActual={onSetActual}
+              onToggle={onToggle} onSetTarget={onSetTarget} onSetActual={onSetActual} onSetValue={onSetValue}
               onEdit={onEdit} onDelete={onDelete} onArchive={onArchive}
             />
           ))}

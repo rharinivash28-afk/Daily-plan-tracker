@@ -15,8 +15,10 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
   const [category, setCategory] = useState("health");
   const [frequency, setFrequency] = useState("daily");
   const [customDays, setCustomDays] = useState([1, 3, 5]);
-  const [duration, setDuration] = useState("");
+  const [targetType, setTargetType] = useState("none"); // none | time | number | duration
   const [targetTime, setTargetTime] = useState("");
+  const [goal, setGoal] = useState("");
+  const [unit, setUnit] = useState("");
   const [shake, setShake] = useState(false);
 
   useEffect(() => {
@@ -24,10 +26,11 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
     if (editing) {
       setName(editing.name); setEmoji(editing.emoji); setCategory(editing.category);
       setFrequency(editing.frequency); setCustomDays(editing.customDays?.length ? editing.customDays : [1, 3, 5]);
-      setDuration(editing.duration || ""); setTargetTime(editing.targetTime || "");
+      setTargetType(editing.targetType || "none"); setTargetTime(editing.targetTime || "");
+      setGoal(editing.goal ?? ""); setUnit(editing.unit || "");
     } else {
       setName(""); setEmoji("🎯"); setCategory("health"); setFrequency("daily");
-      setCustomDays([1, 3, 5]); setDuration(""); setTargetTime("");
+      setCustomDays([1, 3, 5]); setTargetType("none"); setTargetTime(""); setGoal(""); setUnit("");
     }
     setShake(false);
   }, [open, editing]);
@@ -44,9 +47,24 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
     }
     let days = [];
     if (frequency === "custom") days = [...customDays].sort();
-    onSave({ name, emoji, category, frequency, customDays: days, duration, targetTime });
+    const payload = {
+      name, emoji, category, frequency, customDays: days,
+      targetType,
+      targetTime: targetType === "time" ? targetTime : "",
+      goal: (targetType === "number" || targetType === "duration") ? (Number(goal) || (targetType === "duration" ? 10 : 1)) : "",
+      unit: targetType === "number" ? unit : "",
+      duration: targetType === "duration" && goal ? `${goal} min` : "",
+    };
+    onSave(payload);
     onClose();
   };
+
+  const TARGET_TYPES = [
+    { id: "none", label: "Just check off", hint: "Yes / No", icon: "✅" },
+    { id: "time", label: "Time of day", hint: "e.g. 6:00 AM", icon: "🕐" },
+    { id: "number", label: "A number", hint: "e.g. 8 glasses", icon: "🔢" },
+    { id: "duration", label: "Minutes", hint: "e.g. 30 min", icon: "⏱️" },
+  ];
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -113,18 +131,51 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
           )}
         </div>
 
-        {/* duration + target time */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Duration</label>
-            <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 30 min"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
+        {/* target type */}
+        <div>
+          <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">How do you want to track it?</label>
+          <div className="grid grid-cols-2 gap-2">
+            {TARGET_TYPES.map((t) => (
+              <button key={t.id} type="button" onClick={() => setTargetType(t.id)}
+                className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-colors ${targetType === t.id ? "border-purple-600 bg-purple-50 dark:bg-purple-900/30" : "border-black/[0.08] dark:border-white/[0.08] hover:border-purple-200"}`}>
+                <span className="text-lg">{t.icon}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-ink dark:text-ink-dark">{t.label}</span>
+                  <span className="block text-[11px] text-ink-muted truncate">{t.hint}</span>
+                </span>
+              </button>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Target time</label>
-            <input type="time" value={targetTime} onChange={(e) => setTargetTime(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
-          </div>
+
+          {/* type-specific fields */}
+          {targetType === "time" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Target time</label>
+              <input type="time" value={targetTime} onChange={(e) => setTargetTime(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
+            </div>
+          )}
+          {targetType === "number" && (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Daily goal</label>
+                <input type="number" min="1" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. 8"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Unit</label>
+                <input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="e.g. glasses"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
+              </div>
+            </div>
+          )}
+          {targetType === "duration" && (
+            <div className="mt-3">
+              <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Goal (minutes)</label>
+              <input type="number" min="1" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. 30"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
+            </div>
+          )}
         </div>
       </div>
 

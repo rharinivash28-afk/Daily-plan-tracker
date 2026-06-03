@@ -54,7 +54,26 @@ function load() {
 }
 
 // Normalizes a habit into the full schema (backward compatible).
+// Guess a sensible target type/goal from a habit's name (for migration + suggestions).
+function guessTarget(name = "", existing = {}) {
+  // If already typed, keep it.
+  if (existing.targetType) return existing;
+  const n = name.toLowerCase();
+  if (/\bwake|wake up|sleep|bed|rise|morning\b/.test(n) || existing.targetTime)
+    return { targetType: "time", targetTime: existing.targetTime || "" };
+  // numeric: water/glasses/steps/cups/pages/reps + "8 glasses"
+  const numMatch = n.match(/(\d+)\s*(glass|glasses|cup|cups|step|steps|page|pages|rep|reps|km|mile|liter|litre|ml|oz)?/);
+  if (/water|glass|cup|step|drink|pages?|reps?|km|miles?/.test(n))
+    return { targetType: "number", goal: numMatch ? Number(numMatch[1]) || 8 : 8, unit: (numMatch && numMatch[2]) ? numMatch[2] : "" };
+  // duration: "30 min", "read 30 minutes", workout, meditate, exercise
+  const durMatch = (existing.duration || n).match(/(\d+)\s*(min|minute|hr|hour)/);
+  if (durMatch || /meditat|workout|exercise|read|study|walk|run|yoga|journal/.test(n))
+    return { targetType: "duration", goal: durMatch ? Number(durMatch[1]) || 10 : 10 };
+  return { targetType: "none" };
+}
+
 function makeHabit(h = {}) {
+  const guessed = guessTarget(h.name, h);
   return {
     id: h.id || uuid(),
     name: (h.name || "Untitled").trim(),
@@ -64,9 +83,14 @@ function makeHabit(h = {}) {
     customDays: h.customDays || [],
     duration: h.duration || "",
     reminderTime: h.reminderTime || "",
-    targetTime: h.targetTime || "",            // planned time, e.g. "06:00"
+    // target: type + value
+    targetType: h.targetType || guessed.targetType || "none", // none | time | number | duration
+    targetTime: h.targetTime ?? guessed.targetTime ?? "",       // for type "time"
+    goal: h.goal ?? guessed.goal ?? "",                         // for number/duration
+    unit: h.unit ?? guessed.unit ?? "",                         // for number (e.g. glasses)
     completions: h.completions && typeof h.completions === "object" ? h.completions : {},
     actualTimes: h.actualTimes && typeof h.actualTimes === "object" ? h.actualTimes : {}, // dateKey -> "HH:MM"
+    values: h.values && typeof h.values === "object" ? h.values : {}, // dateKey -> number (for number/duration)
     createdAt: h.createdAt || new Date().toISOString(),
     archived: !!h.archived,
   };
@@ -117,7 +141,7 @@ function reducer(state, action) {
         ...state,
         habits: state.habits.map((h) =>
           h.id === action.id
-            ? { ...h, ...action.patch, id: h.id, completions: h.completions, actualTimes: h.actualTimes, createdAt: h.createdAt }
+            ? { ...h, ...action.patch, id: h.id, completions: h.completions, actualTimes: h.actualTimes, values: h.values, createdAt: h.createdAt }
             : h
         ),
       };
@@ -163,6 +187,28 @@ function reducer(state, action) {
           if (time) actualTimes[dateKey] = time;
           else delete actualTimes[dateKey];
           return { ...h, actualTimes };
+        }),
+      };
+    }
+
+    // Set a numeric/duration value for a date; completion derives from reaching the goal.
+    case "SET_VALUE": {
+      const { id, dateKey, value } = action;
+      return {
+        ...state,
+        habits: state.habits.map((h) => {
+          if (h.id !== id) return h;
+          const values = { ...(h.values || {}) };
+          const completions = { ...(h.completions || {}) };
+          const v = Number(value) || 0;
+          if (v <= 0) { delete values[dateKey]; delete completions[dateKey]; }
+          else {
+            values[dateKey] = v;
+            const goal = Number(h.goal) || 1;
+            if (v >= goal) completions[dateKey] = true;
+            else delete completions[dateKey];
+          }
+          return { ...h, values, completions };
         }),
       };
     }

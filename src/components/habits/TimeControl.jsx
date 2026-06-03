@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Clock, CheckCircle2, X } from "lucide-react";
+import { Clock, CheckCircle2, X, Plus, Minus } from "lucide-react";
 
 // "HH:MM" (24h) -> "6:00 AM"
 function pretty(t) {
@@ -138,8 +138,50 @@ function TimeChip({ value, onChange, icon, label, tone = "muted" }) {
   );
 }
 
-// Shows target time (always) and actual time (when done). Both editable.
-export default function TimeControl({ habit, dateKey, done, onSetTarget, onSetActual }) {
+// A +/- counter chip for number/duration targets, with progress toward the goal.
+function CounterChip({ habit, dateKey, onSetValue }) {
+  const goal = Number(habit.goal) || 0;
+  const v = Number((habit.values || {})[dateKey] || 0);
+  const reached = goal > 0 && v >= goal;
+  const unit = habit.targetType === "duration" ? "min" : (habit.unit || "");
+  const tone = reached
+    ? "text-[#1D9E75] bg-[#E1F5EE] dark:bg-[#0A2E25]"
+    : v > 0 ? "text-purple-600 bg-purple-50 dark:bg-purple-900/30" : "text-ink-hint bg-black/[0.04] dark:bg-white/[0.06]";
+
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full text-[11px] font-medium ${tone}`}>
+      <button onClick={() => onSetValue(habit.id, Math.max(0, v - 1), dateKey)}
+        className="w-6 h-6 grid place-items-center rounded-full hover:bg-black/10 dark:hover:bg-white/10" aria-label="Decrease">
+        <Minus size={12} />
+      </button>
+      <span className="tabular-nums px-0.5 min-w-[42px] text-center">
+        {v}{goal ? `/${goal}` : ""}{unit ? ` ${unit}` : ""}
+      </span>
+      <button onClick={() => onSetValue(habit.id, v + 1, dateKey)}
+        className="w-6 h-6 grid place-items-center rounded-full hover:bg-black/10 dark:hover:bg-white/10" aria-label="Increase">
+        <Plus size={12} />
+      </button>
+    </span>
+  );
+}
+
+// Renders the right target control per habit.targetType.
+// none -> nothing (just the check button elsewhere)
+// time -> clock picker (+ actual-time chip when done)
+// number/duration -> +/- counter toward a goal
+export default function TimeControl({ habit, dateKey, done, onSetTarget, onSetActual, onSetValue }) {
+  const type = habit.targetType || "none";
+  if (type === "none") return null;
+
+  if (type === "number" || type === "duration") {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+        <CounterChip habit={habit} dateKey={dateKey} onSetValue={onSetValue} />
+      </div>
+    );
+  }
+
+  // time
   const actual = (habit.actualTimes || {})[dateKey] || "";
   return (
     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
