@@ -54,7 +54,7 @@ function MoreMenu({ setView }) {
 }
 
 function AppInner() {
-  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle } = useHabits();
+  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime } = useHabits();
   const toast = useToast();
   useTheme(); // applies dark class
 
@@ -76,6 +76,8 @@ function AppInner() {
   }, [editing, addHabit, updateHabit, toast]);
 
   const handleToggle = useCallback((id, dateKey) => toggle(id, dateKey), [toggle]);
+  const handleSetTarget = useCallback((id, time) => updateHabit(id, { targetTime: time }), [updateHabit]);
+  const handleSetActual = useCallback((id, time, dateKey) => setActualTime(id, time, dateKey), [setActualTime]);
 
   const handleDayComplete = useCallback((count, streak) => {
     fireConfetti();
@@ -92,7 +94,7 @@ function AppInner() {
             <TodayView
               habits={filtered} weekStartsOn={user.weekStartsOn} name={user.name}
               onAdd={openAdd} onEdit={openEdit} onDelete={setConfirmDelete} onArchive={(h) => { archiveHabit(h.id); toast.info("Habit archived."); }}
-              onToggle={handleToggle} onDayComplete={handleDayComplete}
+              onToggle={handleToggle} onSetTarget={handleSetTarget} onSetActual={handleSetActual} onDayComplete={handleDayComplete}
             />
           )}
           {view === "weekly" && <WeeklyView habits={filtered} weekStartsOn={user.weekStartsOn} onToggle={handleToggle} />}

@@ -23,10 +23,10 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // merge to tolerate older/partial shapes
+      // merge + normalize to tolerate older/partial shapes
       return {
         user: { ...emptyState().user, ...(parsed.user || {}) },
-        habits: parsed.habits || [],
+        habits: Array.isArray(parsed.habits) ? parsed.habits.map(makeHabit) : [],
         journal: parsed.journal || {},
       };
     }
@@ -34,57 +34,42 @@ function load() {
   return emptyState();
 }
 
+// Normalizes a habit into the full schema (backward compatible).
+function makeHabit(h = {}) {
+  return {
+    id: h.id || uuid(),
+    name: (h.name || "Untitled").trim(),
+    emoji: h.emoji || "🎯",
+    category: h.category || "health",
+    frequency: h.frequency || "daily",
+    customDays: h.customDays || [],
+    duration: h.duration || "",
+    reminderTime: h.reminderTime || "",
+    targetTime: h.targetTime || "",            // planned time, e.g. "06:00"
+    completions: h.completions && typeof h.completions === "object" ? h.completions : {},
+    actualTimes: h.actualTimes && typeof h.actualTimes === "object" ? h.actualTimes : {}, // dateKey -> "HH:MM"
+    createdAt: h.createdAt || new Date().toISOString(),
+    archived: !!h.archived,
+  };
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case "SET_USER":
       return { ...state, user: { ...state.user, ...action.patch } };
 
-    case "ADD_HABIT": {
-      const h = action.habit;
-      return {
-        ...state,
-        habits: [
-          ...state.habits,
-          {
-            id: uuid(),
-            name: (h.name || "Untitled").trim(),
-            emoji: h.emoji || "🎯",
-            category: h.category || "health",
-            frequency: h.frequency || "daily",
-            customDays: h.customDays || [],
-            duration: h.duration || "",
-            reminderTime: h.reminderTime || "",
-            completions: {},
-            createdAt: new Date().toISOString(),
-            archived: false,
-          },
-        ],
-      };
-    }
+    case "ADD_HABIT":
+      return { ...state, habits: [...state.habits, makeHabit(action.habit)] };
 
-    case "ADD_HABITS": {
-      const created = action.habits.map((h) => ({
-        id: uuid(),
-        name: (h.name || "Untitled").trim(),
-        emoji: h.emoji || "🎯",
-        category: h.category || "health",
-        frequency: h.frequency || "daily",
-        customDays: h.customDays || [],
-        duration: h.duration || "",
-        reminderTime: h.reminderTime || "",
-        completions: {},
-        createdAt: new Date().toISOString(),
-        archived: false,
-      }));
-      return { ...state, habits: [...state.habits, ...created] };
-    }
+    case "ADD_HABITS":
+      return { ...state, habits: [...state.habits, ...action.habits.map(makeHabit)] };
 
     case "UPDATE_HABIT":
       return {
         ...state,
         habits: state.habits.map((h) =>
           h.id === action.id
-            ? { ...h, ...action.patch, id: h.id, completions: h.completions, createdAt: h.createdAt }
+            ? { ...h, ...action.patch, id: h.id, completions: h.completions, actualTimes: h.actualTimes, createdAt: h.createdAt }
             : h
         ),
       };
@@ -99,15 +84,37 @@ function reducer(state, action) {
       };
 
     case "TOGGLE_COMPLETION": {
-      const { id, dateKey } = action;
+      const { id, dateKey, nowTime } = action;
       return {
         ...state,
         habits: state.habits.map((h) => {
           if (h.id !== id) return h;
           const completions = { ...(h.completions || {}) };
-          if (completions[dateKey]) delete completions[dateKey];
-          else completions[dateKey] = true;
-          return { ...h, completions };
+          const actualTimes = { ...(h.actualTimes || {}) };
+          if (completions[dateKey]) {
+            delete completions[dateKey];
+            delete actualTimes[dateKey]; // clearing a check clears its logged time
+          } else {
+            completions[dateKey] = true;
+            // stamp the current time as the actual time, if provided
+            if (nowTime && !actualTimes[dateKey]) actualTimes[dateKey] = nowTime;
+          }
+          return { ...h, completions, actualTimes };
+        }),
+      };
+    }
+
+    // Set/clear the actual time a habit was done on a given date.
+    case "SET_ACTUAL_TIME": {
+      const { id, dateKey, time } = action;
+      return {
+        ...state,
+        habits: state.habits.map((h) => {
+          if (h.id !== id) return h;
+          const actualTimes = { ...(h.actualTimes || {}) };
+          if (time) actualTimes[dateKey] = time;
+          else delete actualTimes[dateKey];
+          return { ...h, actualTimes };
         }),
       };
     }

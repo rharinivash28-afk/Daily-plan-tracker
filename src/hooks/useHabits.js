@@ -14,12 +14,22 @@ export function useHabits() {
   const deleteHabit = useCallback((id) => dispatch({ type: "DELETE_HABIT", id }), [dispatch]);
   const archiveHabit = useCallback((id) => dispatch({ type: "ARCHIVE_HABIT", id }), [dispatch]);
   const toggle = useCallback(
-    (id, dateKey = todayKey()) => dispatch({ type: "TOGGLE_COMPLETION", id, dateKey }),
+    (id, dateKey = todayKey()) => {
+      // stamp current clock time only when checking off "today"
+      const nowTime = dateKey === todayKey()
+        ? new Date().toTimeString().slice(0, 5) // "HH:MM"
+        : "";
+      dispatch({ type: "TOGGLE_COMPLETION", id, dateKey, nowTime });
+    },
+    [dispatch]
+  );
+  const setActualTime = useCallback(
+    (id, time, dateKey = todayKey()) => dispatch({ type: "SET_ACTUAL_TIME", id, dateKey, time }),
     [dispatch]
   );
 
   return {
     habits, activeHabits, user: state.user,
-    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle,
+    addHabit, addHabits, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime,
   };
 }

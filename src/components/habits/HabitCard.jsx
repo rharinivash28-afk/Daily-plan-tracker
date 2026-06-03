@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { MoreVertical, Pencil, Trash2, Archive } from "lucide-react";
 import HabitDots from "./HabitDots.jsx";
 import HabitCheckButton from "./HabitCheckButton.jsx";
+import TimeControl from "./TimeControl.jsx";
 import StreakBadge from "../ui/StreakBadge.jsx";
 import { catColors, CATEGORIES } from "../../utils/colors.js";
 import { isCompletedOn } from "../../utils/streakLogic.js";
@@ -10,7 +11,7 @@ import { useStreak } from "../../hooks/useStreak.js";
 import { useTheme } from "../../hooks/useTheme.js";
 import { fromKey } from "../../utils/dates.js";
 
-export default function HabitCard({ habit, dateKey, onToggle, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
+export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSetActual, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
   const { isDark } = useTheme();
   const c = catColors(habit.category, isDark);
   const { current: streak } = useStreak(habit);
@@ -52,6 +53,10 @@ export default function HabitCard({ habit, dateKey, onToggle, onEdit, onDelete, 
         <div className="text-xs text-ink-muted mt-0.5 truncate">
           {CATEGORIES[habit.category]?.label}{habit.duration ? ` · ${habit.duration}` : ""}
         </div>
+        <TimeControl
+          habit={habit} dateKey={dateKey} done={done}
+          onSetTarget={onSetTarget} onSetActual={onSetActual}
+        />
         <div className="mt-2 hidden sm:block">
           <HabitDots habit={habit} weekStartsOn={weekStartsOn} />
         </div>

@@ -16,7 +16,7 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
   const [frequency, setFrequency] = useState("daily");
   const [customDays, setCustomDays] = useState([1, 3, 5]);
   const [duration, setDuration] = useState("");
-  const [reminderTime, setReminderTime] = useState("");
+  const [targetTime, setTargetTime] = useState("");
   const [shake, setShake] = useState(false);
 
   useEffect(() => {
@@ -24,10 +24,10 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
     if (editing) {
       setName(editing.name); setEmoji(editing.emoji); setCategory(editing.category);
       setFrequency(editing.frequency); setCustomDays(editing.customDays?.length ? editing.customDays : [1, 3, 5]);
-      setDuration(editing.duration || ""); setReminderTime(editing.reminderTime || "");
+      setDuration(editing.duration || ""); setTargetTime(editing.targetTime || "");
     } else {
       setName(""); setEmoji("🎯"); setCategory("health"); setFrequency("daily");
-      setCustomDays([1, 3, 5]); setDuration(""); setReminderTime("");
+      setCustomDays([1, 3, 5]); setDuration(""); setTargetTime("");
     }
     setShake(false);
   }, [open, editing]);
@@ -44,7 +44,7 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
     }
     let days = [];
     if (frequency === "custom") days = [...customDays].sort();
-    onSave({ name, emoji, category, frequency, customDays: days, duration, reminderTime });
+    onSave({ name, emoji, category, frequency, customDays: days, duration, targetTime });
     onClose();
   };
 
@@ -113,7 +113,7 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
           )}
         </div>
 
-        {/* duration + reminder */}
+        {/* duration + target time */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Duration</label>
@@ -121,8 +121,8 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
               className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Reminder</label>
-            <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)}
+            <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Target time</label>
+            <input type="time" value={targetTime} onChange={(e) => setTargetTime(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400" />
           </div>
         </div>

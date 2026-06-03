@@ -20,7 +20,7 @@ function StatPill({ icon, label, value }) {
   );
 }
 
-export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, onDelete, onArchive, onToggle, onDayComplete }) {
+export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, onDelete, onArchive, onToggle, onSetTarget, onSetActual, onDayComplete }) {
   const tKey = todayKey();
   const tDate = fromKey(tKey);
   const [focus, setFocus] = useState(false);
@@ -138,7 +138,8 @@ export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, o
                 key={h.id} habit={h} dateKey={tKey}
                 weekStartsOn={weekStartsOn}
                 dimmed={focus && !focusIds.has(h.id)}
-                onToggle={onToggle} onEdit={onEdit} onDelete={onDelete} onArchive={onArchive}
+                onToggle={onToggle} onSetTarget={onSetTarget} onSetActual={onSetActual}
+                onEdit={onEdit} onDelete={onDelete} onArchive={onArchive}
               />
             ))}
           </motion.div>
