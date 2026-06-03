@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Sun, Moon, Download, Upload, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Sun, Moon, Sparkles, Heart } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import { useStore } from "../../store/habitStore.jsx";
 import { useTheme } from "../../hooks/useTheme.js";
@@ -19,33 +19,6 @@ export default function SettingsView({ onToast }) {
   const { state, dispatch } = useStore();
   const { isDark, toggle } = useTheme();
   const [name, setName] = useState(state.user.name);
-  const [confirmText, setConfirmText] = useState("");
-  const fileRef = useRef(null);
-
-  const exportData = () => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "habitflow-data.json"; a.click();
-    URL.revokeObjectURL(url);
-    onToast && onToast.success("Data exported! ✨");
-  };
-
-  const importData = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(reader.result);
-        dispatch({ type: "IMPORT", data });
-        onToast && onToast.success("Data imported! ✨");
-      } catch (err) {
-        onToast && onToast.error("Couldn't read that file 😕");
-      }
-    };
-    reader.readAsText(file);
-  };
 
   return (
     <div className="space-y-5 max-w-xl">
@@ -85,28 +58,29 @@ export default function SettingsView({ onToast }) {
         </div>
       </Section>
 
-      <Section title="Data">
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={exportData}><Download size={16} /> Export</Button>
-          <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload size={16} /> Import</Button>
-          <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={importData} />
-        </div>
-        <div className="mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
-          <p className="text-sm text-ink-muted mb-2">Reset all data — type <b>DELETE</b> to confirm.</p>
-          <div className="flex gap-2">
-            <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="DELETE"
-              className="flex-1 px-3.5 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-[#D85A30]" />
-            <Button variant="danger" disabled={confirmText !== "DELETE"}
-              onClick={() => { dispatch({ type: "RESET" }); setConfirmText(""); onToast && onToast.info("All data reset."); }}>
-              <Trash2 size={16} /> Reset
-            </Button>
+      <Section title="About">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl grid place-items-center shrink-0" style={{ background: "#534AB7" }}>
+            <Sparkles size={22} className="text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-ink dark:text-ink-dark">Habitflow</span>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-100">v{VERSION}</span>
+            </div>
+            <p className="text-sm text-ink-muted mt-0.5">Build better days, one habit at a time.</p>
           </div>
         </div>
-      </Section>
 
-      <Section title="About">
-        <p className="text-sm text-ink-muted">Habitflow v{VERSION}</p>
-        <p className="text-sm text-ink-muted mt-1">Built with care to help you build better days. ✨</p>
+        <p className="text-sm text-ink-muted mt-4 leading-relaxed">
+          Habitflow helps you build lasting routines with gentle nudges, streaks, and a little
+          celebration when you finish your day. Your data stays private — everything is stored
+          right here on your device, never on a server.
+        </p>
+
+        <div className="flex items-center gap-1.5 text-xs text-ink-hint mt-4 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+          Made with <Heart size={12} className="text-pink fill-pink" /> for people building better days.
+        </div>
       </Section>
     </div>
   );
