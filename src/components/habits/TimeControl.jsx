@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { Clock, CheckCircle2 } from "lucide-react";
 
 // Pretty-print "HH:MM" (24h) -> "6:00 AM"
@@ -10,14 +10,9 @@ function pretty(t) {
   return `${hh}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-// A tappable time chip backed by a hidden native time input.
+// A time chip: a label overlaid by a transparent native time input.
+// Single click target (the input) = no double-trigger, opens the picker everywhere.
 function TimeChip({ value, onChange, icon, label, tone = "muted" }) {
-  const ref = useRef(null);
-  const open = () => {
-    if (!ref.current) return;
-    if (ref.current.showPicker) ref.current.showPicker();
-    else ref.current.focus();
-  };
   const toneCls = tone === "done"
     ? "text-[#1D9E75] bg-[#E1F5EE] dark:bg-[#0A2E25]"
     : value
@@ -25,17 +20,11 @@ function TimeChip({ value, onChange, icon, label, tone = "muted" }) {
       : "text-ink-hint bg-black/[0.04] dark:bg-white/[0.06]";
 
   return (
-    <span className="relative inline-flex">
-      <button
-        type="button" onClick={open}
-        className={`inline-flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[11px] font-medium ${toneCls}`}
-        title={label}
-      >
-        {icon}
-        {value ? pretty(value) : label}
-      </button>
+    <span className={`relative inline-flex items-center gap-1 pl-1.5 pr-2 py-0.5 rounded-full text-[11px] font-medium ${toneCls}`}>
+      {icon}
+      <span>{value ? pretty(value) : label}</span>
       <input
-        ref={ref} type="time" value={value || ""}
+        type="time" value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

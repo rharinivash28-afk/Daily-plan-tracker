@@ -1,7 +1,7 @@
 import React, { useState, useCallback, lazy, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { StoreProvider } from "./store/habitStore.jsx";
+import { StoreProvider, useStore } from "./store/habitStore.jsx";
 import { ToastProvider, useToast } from "./hooks/useToast.jsx";
 import { useHabits } from "./hooks/useHabits.js";
 import { useTheme } from "./hooks/useTheme.js";
@@ -13,16 +13,18 @@ import WeeklyView from "./components/views/WeeklyView.jsx";
 import StreaksView from "./components/views/StreaksView.jsx";
 import SettingsView from "./components/views/SettingsView.jsx";
 import AddHabitModal from "./components/habits/AddHabitModal.jsx";
+import AddCategoryModal from "./components/ui/AddCategoryModal.jsx";
 import DayCompleteModal from "./components/celebration/DayCompleteModal.jsx";
 import { fireConfetti } from "./components/celebration/ConfettiTrigger.jsx";
 import ToastContainer from "./components/ui/Toast.jsx";
 import Button from "./components/ui/Button.jsx";
 import Modal from "./components/ui/Modal.jsx";
-import { Flame, BookOpen, BarChart2, Settings as SettingsIcon } from "lucide-react";
+import { Flame, BookOpen, BarChart2, CalendarDays, Settings as SettingsIcon } from "lucide-react";
 
-// Lazy-loaded heavier views (charts / journal)
+// Lazy-loaded heavier views (charts / journal / calendar)
 const AnalyticsView = lazy(() => import("./components/views/AnalyticsView.jsx"));
 const JournalView = lazy(() => import("./components/views/JournalView.jsx"));
+const CalendarView = lazy(() => import("./components/views/CalendarView.jsx"));
 
 const fade = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -20 }, transition: { duration: 0.25 } };
 
@@ -32,6 +34,7 @@ function Loading() {
 
 function MoreMenu({ setView }) {
   const items = [
+    { id: "calendar", label: "Calendar", icon: CalendarDays },
     { id: "streaks", label: "Streaks", icon: Flame },
     { id: "journal", label: "Journal", icon: BookOpen },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
@@ -54,13 +57,15 @@ function MoreMenu({ setView }) {
 }
 
 function AppInner() {
-  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime } = useHabits();
+  const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime, addCategory } = useHabits();
+  const { state } = useStore();
   const toast = useToast();
   useTheme(); // applies dark class
 
   const [view, setView] = useState("today");
   const [categoryFilter, setCategoryFilter] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [catModalOpen, setCatModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [celebrate, setCelebrate] = useState(null); // { count, streak }
@@ -86,22 +91,37 @@ function AppInner() {
 
   if (!user.onboardingDone) return <OnboardingFlow />;
 
+  const cardHandlers = {
+    onToggle: handleToggle, onSetTarget: handleSetTarget, onSetActual: handleSetActual,
+    onEdit: openEdit, onDelete: setConfirmDelete,
+    onArchive: (h) => { archiveHabit(h.id); toast.info("Habit archived."); },
+  };
+
   return (
-    <AppShell view={view} setView={setView} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}>
+    <AppShell
+      view={view} setView={setView}
+      categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
+      onAddCategory={() => setCatModalOpen(true)}
+    >
       <AnimatePresence mode="wait">
         <motion.div key={view} {...fade}>
           {view === "today" && (
             <TodayView
+              {...cardHandlers}
               habits={filtered} weekStartsOn={user.weekStartsOn} name={user.name}
-              onAdd={openAdd} onEdit={openEdit} onDelete={setConfirmDelete} onArchive={(h) => { archiveHabit(h.id); toast.info("Habit archived."); }}
-              onToggle={handleToggle} onSetTarget={handleSetTarget} onSetActual={handleSetActual} onDayComplete={handleDayComplete}
+              onAdd={openAdd} onDayComplete={handleDayComplete}
             />
+          )}
+          {view === "calendar" && (
+            <Suspense fallback={<Loading />}>
+              <CalendarView {...cardHandlers} habits={filtered} weekStartsOn={user.weekStartsOn} journal={state.journal} onAdd={openAdd} />
+            </Suspense>
           )}
           {view === "weekly" && <WeeklyView habits={filtered} weekStartsOn={user.weekStartsOn} onToggle={handleToggle} />}
           {view === "streaks" && <StreaksView habits={filtered} />}
           {view === "analytics" && <Suspense fallback={<Loading />}><AnalyticsView habits={filtered} /></Suspense>}
           {view === "journal" && <Suspense fallback={<Loading />}><JournalView onToast={toast} /></Suspense>}
-          {view === "settings" && <SettingsView onToast={toast} />}
+          {view === "settings" && <SettingsView onToast={toast} onAddCategory={() => setCatModalOpen(true)} />}
           {view === "more" && <MoreMenu setView={setView} />}
         </motion.div>
       </AnimatePresence>
@@ -113,6 +133,8 @@ function AppInner() {
       />
 
       <AddHabitModal open={modalOpen} editing={editing} onClose={() => setModalOpen(false)} onSave={handleSave} onToast={toast} />
+
+      <AddCategoryModal open={catModalOpen} onClose={() => setCatModalOpen(false)} onAdd={addCategory} onToast={toast} />
 
       {/* delete confirm */}
       <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} maxWidth="380px">

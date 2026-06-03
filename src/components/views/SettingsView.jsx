@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Sun, Moon, Sparkles, Heart } from "lucide-react";
+import { Sun, Moon, Sparkles, Heart, Plus, Pencil, Trash2, ArchiveRestore, Check, X } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import { useStore } from "../../store/habitStore.jsx";
 import { useTheme } from "../../hooks/useTheme.js";
+import { useHabits } from "../../hooks/useHabits.js";
+import { allCategories, BUILTIN_KEYS, catColors } from "../../utils/colors.js";
 
-const VERSION = "2.0.0";
+const VERSION = "2.1.0";
+const ACCENTS = ["#534AB7", "#1D9E75", "#378ADD", "#D85A30", "#BA7517", "#D4537E"];
 
 function Section({ title, children }) {
   return (
@@ -15,10 +18,16 @@ function Section({ title, children }) {
   );
 }
 
-export default function SettingsView({ onToast }) {
+export default function SettingsView({ onToast, onAddCategory }) {
   const { state, dispatch } = useStore();
   const { isDark, toggle } = useTheme();
+  const { habits, addCategory, renameCategory, deleteCategory, updateHabit, deleteHabit, setUser } = useHabits();
   const [name, setName] = useState(state.user.name);
+  const [editingCat, setEditingCat] = useState(null); // key being renamed
+  const [catDraft, setCatDraft] = useState("");
+
+  const customCats = allCategories().filter((c) => !BUILTIN_KEYS.includes(c.key));
+  const archived = habits.filter((h) => h.archived);
 
   return (
     <div className="space-y-5 max-w-xl">
@@ -56,6 +65,85 @@ export default function SettingsView({ onToast }) {
           <input type="time" value={state.user.reminderTime} onChange={(e) => dispatch({ type: "SET_USER", patch: { reminderTime: e.target.value } })}
             className="px-3 py-1.5 rounded-lg border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark text-sm" />
         </div>
+      </Section>
+
+      <Section title="Appearance">
+        <div className="flex items-center justify-between py-1">
+          <span className="text-sm text-ink dark:text-ink-dark">Accent color</span>
+          <div className="flex gap-1.5">
+            {ACCENTS.map((c) => (
+              <button key={c} onClick={() => setUser({ accent: c })}
+                className={`w-7 h-7 rounded-full transition-transform ${state.user.accent === c ? "ring-2 ring-offset-2 ring-offset-card-light dark:ring-offset-card-dark scale-110" : ""}`}
+                style={{ background: c, boxShadow: state.user.accent === c ? `0 0 0 2px ${c}` : "none" }} aria-label="Accent" />
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-between py-1 mt-2">
+          <span className="text-sm text-ink dark:text-ink-dark">Text size</span>
+          <div className="flex gap-1">
+            {[["Normal", "normal"], ["Large", "large"]].map(([lbl, val]) => (
+              <button key={val} onClick={() => setUser({ textSize: val })}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium ${(state.user.textSize || "normal") === val ? "bg-purple-600 text-white" : "border border-black/[0.08] dark:border-white/[0.08] text-ink-muted"}`}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Categories">
+        <div className="space-y-1.5">
+          {allCategories().map((c) => {
+            const isCustom = !BUILTIN_KEYS.includes(c.key);
+            const editing = editingCat === c.key;
+            return (
+              <div key={c.key} className="flex items-center gap-2.5 py-1">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.dot }} />
+                {editing ? (
+                  <>
+                    <input autoFocus value={catDraft} onChange={(e) => setCatDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { renameCategory(c.key, catDraft); setEditingCat(null); } }}
+                      className="flex-1 px-2.5 py-1 rounded-lg border border-purple-400 bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark text-sm focus:outline-none" />
+                    <button onClick={() => { renameCategory(c.key, catDraft); setEditingCat(null); }} className="p-1 rounded-md text-[#1D9E75] hover:bg-black/5"><Check size={15} /></button>
+                    <button onClick={() => setEditingCat(null)} className="p-1 rounded-md text-ink-muted hover:bg-black/5"><X size={15} /></button>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex-1 text-sm text-ink dark:text-ink-dark">{c.label}{!isCustom && <span className="text-ink-hint text-xs ml-2">built-in</span>}</span>
+                    {isCustom && (
+                      <>
+                        <button onClick={() => { setEditingCat(c.key); setCatDraft(c.label); }} className="p-1 rounded-md text-ink-muted hover:bg-black/5 hover:text-purple-600"><Pencil size={14} /></button>
+                        <button onClick={() => { deleteCategory(c.key); onToast && onToast.info("Category removed."); }} className="p-1 rounded-md text-ink-muted hover:bg-black/5 hover:text-[#D85A30]"><Trash2 size={14} /></button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <Button variant="outline" size="sm" className="mt-3" onClick={onAddCategory}><Plus size={15} /> Add category</Button>
+      </Section>
+
+      <Section title="Archived habits">
+        {archived.length === 0 ? (
+          <p className="text-sm text-ink-muted">No archived habits.</p>
+        ) : (
+          <div className="space-y-1.5">
+            {archived.map((h) => (
+              <div key={h.id} className="flex items-center gap-2.5 py-1">
+                <span className="text-lg">{h.emoji}</span>
+                <span className="flex-1 text-sm text-ink dark:text-ink-dark truncate">{h.name}</span>
+                <button onClick={() => { updateHabit(h.id, { archived: false }); onToast && onToast.success("Restored! ✨"); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30">
+                  <ArchiveRestore size={13} /> Restore
+                </button>
+                <button onClick={() => { deleteHabit(h.id); onToast && onToast.info("Deleted."); }}
+                  className="p-1 rounded-md text-ink-muted hover:bg-black/5 hover:text-[#D85A30]"><Trash2 size={14} /></button>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section title="About">

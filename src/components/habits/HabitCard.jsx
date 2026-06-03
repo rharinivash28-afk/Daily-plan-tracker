@@ -5,7 +5,7 @@ import HabitDots from "./HabitDots.jsx";
 import HabitCheckButton from "./HabitCheckButton.jsx";
 import TimeControl from "./TimeControl.jsx";
 import StreakBadge from "../ui/StreakBadge.jsx";
-import { catColors, CATEGORIES } from "../../utils/colors.js";
+import { catColors, catLabel } from "../../utils/colors.js";
 import { isCompletedOn } from "../../utils/streakLogic.js";
 import { useStreak } from "../../hooks/useStreak.js";
 import { useTheme } from "../../hooks/useTheme.js";
@@ -51,7 +51,7 @@ export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSet
           </span>
         </div>
         <div className="text-xs text-ink-muted mt-0.5 truncate">
-          {CATEGORIES[habit.category]?.label}{habit.duration ? ` · ${habit.duration}` : ""}
+          {catLabel(habit.category)}{habit.duration ? ` · ${habit.duration}` : ""}
         </div>
         <TimeControl
           habit={habit} dateKey={dateKey} done={done}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from "react";
 import { uuid } from "../utils/dates.js";
+import { setCustomCategories, CATEGORY_PALETTE } from "../utils/colors.js";
 
 const STORAGE_KEY = "habitflow_data";
 
@@ -12,11 +13,25 @@ const emptyState = () => ({
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : false,
     reminderTime: "08:00",
+    accent: "#534AB7",
+    textSize: "normal", // "normal" | "large"
+    categories: {},     // custom: key -> { label, dot, bg, text, darkBg, darkText }
     onboardingDone: false,
   },
   habits: [],
   journal: {},
 });
+
+// Build a custom-category object from a name + palette index.
+function makeCategory(name, paletteIndex = 0) {
+  const p = CATEGORY_PALETTE[paletteIndex % CATEGORY_PALETTE.length];
+  return { label: name.trim(), ...p };
+}
+
+// Push the user's custom categories into the colors registry so catColors() sees them.
+function syncCategories(user) {
+  setCustomCategories(user?.categories || {});
+}
 
 function load() {
   try {
@@ -24,14 +39,18 @@ function load() {
     if (raw) {
       const parsed = JSON.parse(raw);
       // merge + normalize to tolerate older/partial shapes
-      return {
+      const state = {
         user: { ...emptyState().user, ...(parsed.user || {}) },
         habits: Array.isArray(parsed.habits) ? parsed.habits.map(makeHabit) : [],
         journal: parsed.journal || {},
       };
+      syncCategories(state.user);
+      return state;
     }
   } catch (e) {}
-  return emptyState();
+  const s = emptyState();
+  syncCategories(s.user);
+  return s;
 }
 
 // Normalizes a habit into the full schema (backward compatible).
@@ -57,6 +76,35 @@ function reducer(state, action) {
   switch (action.type) {
     case "SET_USER":
       return { ...state, user: { ...state.user, ...action.patch } };
+
+    case "ADD_CATEGORY": {
+      const name = (action.name || "").trim();
+      if (!name) return state;
+      // key from name; ensure unique
+      let key = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "cat";
+      const existing = state.user.categories || {};
+      if (existing[key]) key = `${key}-${Date.now().toString(36).slice(-3)}`;
+      const idx = action.paletteIndex ?? Object.keys(existing).length;
+      return {
+        ...state,
+        user: { ...state.user, categories: { ...existing, [key]: makeCategory(name, idx) } },
+      };
+    }
+
+    case "RENAME_CATEGORY": {
+      const cats = { ...(state.user.categories || {}) };
+      if (!cats[action.key]) return state;
+      cats[action.key] = { ...cats[action.key], label: (action.name || cats[action.key].label).trim() };
+      return { ...state, user: { ...state.user, categories: cats } };
+    }
+
+    case "DELETE_CATEGORY": {
+      const cats = { ...(state.user.categories || {}) };
+      delete cats[action.key];
+      // reassign any habits using it back to "health"
+      const habits = state.habits.map((h) => (h.category === action.key ? { ...h, category: "health" } : h));
+      return { ...state, user: { ...state.user, categories: cats }, habits };
+    }
 
     case "ADD_HABIT":
       return { ...state, habits: [...state.habits, makeHabit(action.habit)] };
@@ -145,11 +193,21 @@ const StoreContext = createContext(null);
 export function StoreProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, load);
 
+  // Keep the colors registry in sync synchronously so catColors() is correct on first paint.
+  syncCategories(state.user);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
   }, [state]);
+
+  // Apply appearance (accent + text size) to CSS vars.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--accent", state.user.accent || "#534AB7");
+    root.style.fontSize = state.user.textSize === "large" ? "17px" : "16px";
+  }, [state.user.accent, state.user.textSize]);
 
   return <StoreContext.Provider value={{ state, dispatch }}>{children}</StoreContext.Provider>;
 }

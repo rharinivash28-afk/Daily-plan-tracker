@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import Modal from "../ui/Modal.jsx";
 import Button from "../ui/Button.jsx";
 import EmojiPicker from "../ui/EmojiPicker.jsx";
-import { CATEGORIES, CATEGORY_KEYS } from "../../utils/colors.js";
+import { allCategories, catColors } from "../../utils/colors.js";
 import { DOW_LABELS } from "../../utils/dates.js";
 
 const UI_TO_JS = [1, 2, 3, 4, 5, 6, 0]; // Mon-first columns -> JS day index
@@ -80,9 +80,9 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
               value={category} onChange={(e) => setCategory(e.target.value)}
               className="w-full appearance-none pl-8 pr-3 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
-              {CATEGORY_KEYS.map((k) => <option key={k} value={k}>{CATEGORIES[k].label}</option>)}
+              {allCategories().map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full" style={{ background: CATEGORIES[category].dot }} />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full" style={{ background: catColors(category).dot }} />
           </div>
         </div>
 

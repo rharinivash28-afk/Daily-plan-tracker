@@ -1,8 +1,8 @@
 import React from "react";
-import { CATEGORIES } from "../../utils/colors.js";
+import { catColors } from "../../utils/colors.js";
 
 export default function CategoryDot({ category, size = 8 }) {
-  const c = CATEGORIES[category] || CATEGORIES.health;
+  const c = catColors(category);
   return (
     <span
       className="inline-block rounded-full shrink-0"
