@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ChevronDown, Check } from "lucide-react";
 import Modal from "../ui/Modal.jsx";
 import Button from "../ui/Button.jsx";
 import EmojiPicker from "../ui/EmojiPicker.jsx";
@@ -8,6 +8,58 @@ import { allCategories, catColors } from "../../utils/colors.js";
 import { DOW_LABELS } from "../../utils/dates.js";
 
 const UI_TO_JS = [1, 2, 3, 4, 5, 6, 0]; // Mon-first columns -> JS day index
+
+// Custom, visible category dropdown with colored dots + checkmark.
+function CategorySelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const cats = allCategories();
+  const current = cats.find((c) => c.key === value) || cats[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center gap-2.5 pl-3.5 pr-3 py-2.5 rounded-xl border bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark transition-colors ${open ? "border-accent ring-2 ring-purple-400" : "border-black/[0.08] dark:border-white/[0.08] hover:border-purple-200"}`}>
+        <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ background: current.dot }} />
+        <span className="flex-1 text-left text-sm font-medium">{current.label}</span>
+        <ChevronDown size={18} className={`text-ink-muted transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-30 mt-1.5 w-full max-h-60 overflow-y-auto rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark p-1.5"
+            style={{ boxShadow: "0 12px 36px rgba(31,38,80,0.18)" }}
+          >
+            {cats.map((c) => {
+              const active = c.key === value;
+              return (
+                <button key={c.key} type="button"
+                  onClick={() => { onChange(c.key); setOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-left transition-colors ${active ? "bg-accent-soft" : "hover:bg-black/5 dark:hover:bg-white/10"}`}>
+                  <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ background: c.dot }} />
+                  <span className="flex-1 font-medium text-ink dark:text-ink-dark">{c.label}</span>
+                  {active && <Check size={16} className="text-accent" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function AddHabitModal({ open, editing, onClose, onSave, onToast }) {
   const [name, setName] = useState("");
@@ -93,15 +145,7 @@ export default function AddHabitModal({ open, editing, onClose, onSave, onToast 
         {/* category */}
         <div>
           <label className="block text-sm font-medium mb-1.5 text-ink dark:text-ink-dark">Category</label>
-          <div className="relative">
-            <select
-              value={category} onChange={(e) => setCategory(e.target.value)}
-              className="w-full appearance-none pl-8 pr-3 py-2.5 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              {allCategories().map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-            </select>
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full" style={{ background: catColors(category).dot }} />
-          </div>
+          <CategorySelect value={category} onChange={setCategory} />
         </div>
 
         {/* frequency */}
