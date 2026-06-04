@@ -35,15 +35,65 @@ html, body, #root {
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #FAFAF9;
   color: #1A1A1A;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Atmospheric gradient mesh so frosted glass has something to refract */
+  background-color: #EEF0F7;
+  background-image:
+    radial-gradient(1100px 700px at 8% -8%, rgba(127,119,221,0.30), transparent 60%),
+    radial-gradient(900px 650px at 100% 0%, rgba(29,158,117,0.18), transparent 55%),
+    radial-gradient(1000px 800px at 50% 115%, rgba(55,138,221,0.20), transparent 60%);
+  background-attachment: fixed;
 }
 
 html.dark body {
-  background-color: #0F0F0F;
   color: #F5F5F5;
+  background-color: #0C0C12;
+  background-image:
+    radial-gradient(1100px 700px at 8% -8%, rgba(127,119,221,0.30), transparent 60%),
+    radial-gradient(900px 650px at 100% 0%, rgba(29,158,117,0.16), transparent 55%),
+    radial-gradient(1000px 800px at 50% 115%, rgba(55,138,221,0.20), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* ---------- Glossy / glassmorphism theme ---------- */
+/* Card surfaces become frosted glass. Targets the Tailwind utilities the
+   components already use, so the look cascades app-wide.
+   Light rule is scoped to :not(.dark) so it never fights the dark glass. */
+.glass-base,
+html:not(.dark) .bg-card-light {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 8px 30px rgba(31,38,80,0.10);
+}
+/* In dark mode, BOTH the dark surface and any light-surface element become
+   the same translucent dark glass (components stack bg-card-light dark:bg-card-dark). */
+html.dark .bg-card-dark,
+html.dark .bg-card-light {
+  background-color: rgba(32, 32, 46, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 30px rgba(0,0,0,0.35);
+}
+
+/* Page tints used by inputs/onboarding become translucent */
+html:not(.dark) .bg-bg-light { background-color: rgba(255,255,255,0.45) !important; }
+html.dark .bg-bg-dark,
+html.dark .bg-bg-light { background-color: rgba(255,255,255,0.05) !important; }
+
+/* Glassy sidebar / sheet surfaces already use bg-card-* so they inherit blur. */
+
+/* Glossy primary buttons: accent gradient + top sheen highlight */
+.bg-accent {
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0) 45%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 6px 18px rgba(var(--accent-rgb) / 0.35);
+}
+.bg-accent:hover {
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 50%);
 }
 
 /* Flat scrollbars */
