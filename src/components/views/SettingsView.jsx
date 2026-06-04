@@ -8,7 +8,11 @@ import { requestNotificationPermission } from "../../hooks/useReminders.js";
 import { allCategories, BUILTIN_KEYS, catColors } from "../../utils/colors.js";
 
 const VERSION = "2.2.0";
-const ACCENTS = ["#534AB7", "#1D9E75", "#378ADD", "#D85A30", "#BA7517", "#D4537E"];
+const ACCENTS = [
+  "#534AB7", "#7C3AED", "#2563EB", "#378ADD", "#0EA5A5", "#1D9E75",
+  "#16A34A", "#CA8A04", "#BA7517", "#EA580C", "#D85A30", "#DC2626",
+  "#D4537E", "#DB2777", "#475569",
+];
 
 function Section({ title, children }) {
   return (
@@ -106,14 +110,19 @@ export default function SettingsView({ onToast, onAddCategory }) {
       </Section>
 
       <Section title="Appearance">
-        <div className="flex items-center justify-between py-1">
+        <div className="py-1">
           <span className="text-sm text-ink dark:text-ink-dark">Accent color</span>
-          <div className="flex gap-1.5">
-            {ACCENTS.map((c) => (
-              <button key={c} onClick={() => setUser({ accent: c })}
-                className={`w-7 h-7 rounded-full transition-transform ${state.user.accent === c ? "ring-2 ring-offset-2 ring-offset-card-light dark:ring-offset-card-dark scale-110" : ""}`}
-                style={{ background: c, boxShadow: state.user.accent === c ? `0 0 0 2px ${c}` : "none" }} aria-label="Accent" />
-            ))}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {ACCENTS.map((c) => {
+              const active = state.user.accent === c;
+              return (
+                <button key={c} onClick={() => setUser({ accent: c })}
+                  className={`w-8 h-8 rounded-full grid place-items-center transition-transform ${active ? "scale-110" : "hover:scale-105"}`}
+                  style={{ background: c, boxShadow: active ? `0 0 0 2px var(--card), 0 0 0 4px ${c}` : "none" }} aria-label="Accent">
+                  {active && <Check size={15} className="text-white" />}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="flex items-center justify-between py-1 mt-2">
@@ -221,7 +230,7 @@ export default function SettingsView({ onToast, onAddCategory }) {
 
       <Section title="About">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl grid place-items-center shrink-0" style={{ background: "#534AB7" }}>
+          <div className="w-12 h-12 rounded-2xl grid place-items-center shrink-0" style={{ background: "var(--accent)" }}>
             <Sparkles size={22} className="text-white" />
           </div>
           <div>

@@ -28,6 +28,39 @@ html.dark {
 .accent-stroke { stroke: var(--accent); }
 .hover-accent-soft:hover { background-color: var(--accent-soft); }
 
+/* ----- Global accent remap -----
+   Make Tailwind's purple-* shades follow the chosen accent so changing the
+   accent recolors the WHOLE app (buttons, dots, charts, active states, etc).
+   Ramp vars (--accent-50..900) are set at runtime from the chosen accent. */
+:root {
+  --accent-50: #EEEDFE;  --accent-100: #CECBF6; --accent-200: #AFA9EC;
+  --accent-300: #938cE3; --accent-400: #7F77DD; --accent-500: #635ac7;
+  --accent-600: #534AB7; --accent-700: #443c97; --accent-800: #3C3489; --accent-900: #26215C;
+}
+.bg-purple-50  { background-color: var(--accent-50)  !important; }
+.bg-purple-100 { background-color: var(--accent-100) !important; }
+.bg-purple-200 { background-color: var(--accent-200) !important; }
+.bg-purple-400 { background-color: var(--accent-400) !important; }
+.bg-purple-600 { background-color: var(--accent-600) !important; }
+.bg-purple-800 { background-color: var(--accent-800) !important; }
+.bg-purple-900 { background-color: var(--accent-900) !important; }
+.text-purple-100 { color: var(--accent-100) !important; }
+.text-purple-400 { color: var(--accent-400) !important; }
+.text-purple-600 { color: var(--accent-600) !important; }
+.text-purple-800 { color: var(--accent-800) !important; }
+.border-purple-200 { border-color: var(--accent-200) !important; }
+.border-purple-600 { border-color: var(--accent-600) !important; }
+.hover\:bg-purple-50:hover  { background-color: var(--accent-50)  !important; }
+.hover\:bg-purple-800:hover { background-color: var(--accent-800) !important; }
+.hover\:border-purple-200:hover { border-color: var(--accent-200) !important; }
+.ring-purple-400 { --tw-ring-color: var(--accent-400) !important; }
+.focus\:ring-purple-400:focus { --tw-ring-color: var(--accent-400) !important; }
+/* dark-mode purple tints */
+.dark\:bg-purple-900\/40:is(.dark *) { background-color: rgb(var(--accent-rgb) / 0.4) !important; }
+.dark\:bg-purple-900\/30:is(.dark *) { background-color: rgb(var(--accent-rgb) / 0.3) !important; }
+.dark\:bg-purple-900\/50:is(.dark *) { background-color: rgb(var(--accent-rgb) / 0.5) !important; }
+.dark\:text-purple-100:is(.dark *) { color: var(--accent-200) !important; }
+
 html, body, #root {
   height: 100%;
 }

@@ -177,11 +177,11 @@ export default function OnboardingFlow() {
               <motion.div className="w-24 h-24 mx-auto mb-6">
                 <svg viewBox="0 0 52 52" className="w-full h-full">
                   <motion.circle
-                    cx="26" cy="26" r="24" fill="none" stroke="#534AB7" strokeWidth="3"
+                    cx="26" cy="26" r="24" fill="none" stroke="var(--accent)" strokeWidth="3"
                     initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6 }}
                   />
                   <motion.path
-                    d="M16 27 l7 7 l14 -16" fill="none" stroke="#534AB7" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+                    d="M16 27 l7 7 l14 -16" fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
                     initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.5 }}
                   />
                 </svg>

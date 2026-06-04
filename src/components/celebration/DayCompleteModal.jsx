@@ -36,9 +36,9 @@ export default function DayCompleteModal({ open, count, streak, onClose }) {
           >
             <div className="w-20 h-20 mx-auto mb-4">
               <svg viewBox="0 0 52 52" className="w-full h-full">
-                <motion.circle cx="26" cy="26" r="24" fill="none" stroke="#534AB7" strokeWidth="3"
+                <motion.circle cx="26" cy="26" r="24" fill="none" stroke="var(--accent)" strokeWidth="3"
                   initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6 }} />
-                <motion.path d="M16 27 l7 7 l14 -16" fill="none" stroke="#534AB7" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+                <motion.path d="M16 27 l7 7 l14 -16" fill="none" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
                   initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.5 }} />
               </svg>
             </div>

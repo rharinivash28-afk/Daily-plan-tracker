@@ -34,6 +34,22 @@ function shade(hex, amt) {
   const f = (c) => Math.max(0, Math.min(255, Math.round(c + c * amt)));
   return `#${[f(r), f(g), f(b)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
+// Mix a hex toward white (t>0) or black (t<0), |t| in 0..1.
+function mix(hex, t) {
+  const { r, g, b } = hexToRgb(hex);
+  const target = t >= 0 ? 255 : 0;
+  const a = Math.abs(t);
+  const f = (c) => Math.round(c + (target - c) * a);
+  return `#${[f(r), f(g), f(b)].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+// Build a Tailwind-like 50..900 ramp from a base accent (treated as ~600).
+function accentRamp(hex) {
+  return {
+    50: mix(hex, 0.88), 100: mix(hex, 0.74), 200: mix(hex, 0.55),
+    300: mix(hex, 0.36), 400: mix(hex, 0.18), 500: mix(hex, 0.06),
+    600: hex, 700: mix(hex, -0.12), 800: mix(hex, -0.24), 900: mix(hex, -0.40),
+  };
+}
 
 // Build a custom-category object from a name + palette index.
 function makeCategory(name, paletteIndex = 0) {
@@ -266,11 +282,13 @@ export function StoreProvider({ children }) {
     const root = document.documentElement;
     const accent = state.user.accent || "#534AB7";
     root.style.setProperty("--accent", accent);
-    // derive a darker shade (hover) and a soft tint (light backgrounds)
     const { r, g, b } = hexToRgb(accent);
     root.style.setProperty("--accent-rgb", `${r} ${g} ${b}`);
     root.style.setProperty("--accent-dark", shade(accent, -0.18));
     root.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.12)`);
+    // Full ramp so every purple-* utility follows the accent app-wide.
+    const ramp = accentRamp(accent);
+    Object.entries(ramp).forEach(([k, v]) => root.style.setProperty(`--accent-${k}`, v));
     root.style.fontSize = state.user.textSize === "large" ? "17px" : "16px";
   }, [state.user.accent, state.user.textSize]);
 
