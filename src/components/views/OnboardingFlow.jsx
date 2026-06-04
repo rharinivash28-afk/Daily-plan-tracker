@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, ArrowRight } from "lucide-react";
+import { Sparkles, Check, ArrowRight, Plus, X } from "lucide-react";
 import Button from "../ui/Button.jsx";
-import { STARTER_PACKS } from "../../utils/habitDefaults.js";
+import { STARTER_PACKS, EMOJI_OPTIONS } from "../../utils/habitDefaults.js";
 import { useHabits } from "../../hooks/useHabits.js";
 import { useStore } from "../../store/habitStore.jsx";
 
@@ -17,7 +17,11 @@ export default function OnboardingFlow() {
   const { dispatch } = useStore();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
-  const [pack, setPack] = useState(null);
+  const [packs, setPacks] = useState([]);        // selected pack ids (multi)
+  const [custom, setCustom] = useState([]);      // [{ name, emoji }]
+  const [adding, setAdding] = useState(false);   // inline add form open
+  const [draftName, setDraftName] = useState("");
+  const [draftEmoji, setDraftEmoji] = useState("🎯");
 
   // Step 3 auto-advance
   useEffect(() => {
@@ -27,9 +31,24 @@ export default function OnboardingFlow() {
     }
   }, [step]);
 
+  const togglePack = (id) =>
+    setPacks((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
+
+  const addCustom = () => {
+    if (!draftName.trim()) return;
+    setCustom((prev) => [...prev, { name: draftName.trim(), emoji: draftEmoji, category: "health", frequency: "daily" }]);
+    setDraftName(""); setDraftEmoji("🎯"); setAdding(false);
+  };
+
+  const totalSelected = packs.reduce((n, id) => {
+    const p = STARTER_PACKS.find((x) => x.id === id);
+    return n + (p ? p.habits.length : 0);
+  }, 0) + custom.length;
+
   function commitPack() {
-    const chosen = STARTER_PACKS.find((p) => p.id === pack);
-    if (chosen) addHabits(chosen.habits);
+    const fromPacks = packs.flatMap((id) => STARTER_PACKS.find((p) => p.id === id)?.habits || []);
+    const all = [...fromPacks, ...custom];
+    if (all.length) addHabits(all);
     setStep(2);
   }
 
@@ -76,28 +95,27 @@ export default function OnboardingFlow() {
           {step === 1 && (
             <motion.div key="s2" variants={slide} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
               <h1 className="text-2xl font-bold text-center text-ink dark:text-ink-dark">Choose your starting habits</h1>
-              <p className="mt-2 text-center text-ink-muted">Pick one pack to get started. You can add more anytime.</p>
-              <div className="mt-6 space-y-3">
+              <p className="mt-2 text-center text-ink-muted">Pick any packs you like and add your own. You can change these anytime.</p>
+
+              <div className="mt-6 space-y-3 max-h-[46vh] overflow-y-auto pr-1">
                 {STARTER_PACKS.map((p) => {
-                  const active = pack === p.id;
+                  const active = packs.includes(p.id);
                   return (
                     <button
-                      key={p.id} onClick={() => setPack(p.id)}
+                      key={p.id} onClick={() => togglePack(p.id)}
                       className={`relative w-full text-left p-4 rounded-2xl border transition-colors ${
-                        active ? "border-purple-600 bg-purple-50 dark:bg-purple-900/30" : "border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark hover:border-purple-200"
+                        active ? "border-accent bg-accent-soft" : "border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark hover:border-purple-200"
                       }`}
                     >
-                      {active && (
-                        <span className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-600 grid place-items-center">
-                          <Check size={14} className="text-white" />
-                        </span>
-                      )}
+                      <span className={`absolute top-3 right-3 w-6 h-6 rounded-full grid place-items-center border-2 transition-colors ${active ? "bg-accent border-accent" : "border-black/15 dark:border-white/20"}`}>
+                        {active && <Check size={14} className="text-white" />}
+                      </span>
                       <div className="flex items-start gap-3">
                         <span className="text-2xl">{p.emoji}</span>
                         <div>
                           <div className="font-semibold text-ink dark:text-ink-dark">{p.title}</div>
                           <div className="text-sm text-ink-muted mt-0.5">{p.description}</div>
-                          <span className="inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-100">
+                          <span className="inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full bg-accent-soft text-accent">
                             {p.habits.length} habits included
                           </span>
                         </div>
@@ -105,10 +123,52 @@ export default function OnboardingFlow() {
                     </button>
                   );
                 })}
+
+                {/* custom habits added so far */}
+                {custom.map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl border border-accent/40 bg-accent-soft">
+                    <span className="text-xl">{c.emoji}</span>
+                    <span className="flex-1 text-sm font-medium text-ink dark:text-ink-dark truncate">{c.name}</span>
+                    <button onClick={() => setCustom((prev) => prev.filter((_, j) => j !== i))}
+                      className="p-1 rounded-md text-ink-muted hover:bg-black/5 dark:hover:bg-white/10"><X size={15} /></button>
+                  </div>
+                ))}
+
+                {/* inline add form / + button */}
+                {adding ? (
+                  <div className="p-3 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark">
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus value={draftName} onChange={(e) => setDraftName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") addCustom(); }}
+                        placeholder="e.g. Stretch for 5 minutes"
+                        className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark text-sm focus:outline-none focus:ring-2 ring-accent"
+                      />
+                      <button onClick={addCustom} className="px-3 py-2 rounded-xl text-sm font-semibold text-white bg-accent">Add</button>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {EMOJI_OPTIONS.slice(0, 12).map((e) => (
+                        <button key={e} onClick={() => setDraftEmoji(e)}
+                          className={`w-8 h-8 grid place-items-center rounded-lg text-lg ${draftEmoji === e ? "bg-accent-soft ring-1 ring-accent" : "hover:bg-black/5 dark:hover:bg-white/10"}`}>
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setAdding(true)}
+                    className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl border border-dashed border-black/15 dark:border-white/20 text-ink-muted hover:text-accent hover:border-accent transition-colors">
+                    <Plus size={18} /> Add your own habit
+                  </button>
+                )}
               </div>
-              <Button size="lg" className="w-full mt-6" onClick={commitPack} disabled={!pack}>
-                Add these habits <ArrowRight size={18} />
+
+              <Button size="lg" className="w-full mt-5" onClick={commitPack} disabled={totalSelected === 0}>
+                {totalSelected === 0 ? "Pick or add a habit" : `Add ${totalSelected} habit${totalSelected === 1 ? "" : "s"}`} <ArrowRight size={18} />
               </Button>
+              <button onClick={() => setStep(2)} className="w-full mt-2 text-sm text-ink-muted hover:text-ink dark:hover:text-ink-dark">
+                Skip for now
+              </button>
             </motion.div>
           )}
 
