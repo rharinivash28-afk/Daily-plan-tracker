@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Sun, Moon, Sparkles, Heart, Plus, Pencil, Trash2, ArchiveRestore, Check, X, Bell } from "lucide-react";
+import { Sun, Moon, Sparkles, Heart, Plus, Pencil, Trash2, ArchiveRestore, Check, X, Bell, AlertTriangle } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import { useStore } from "../../store/habitStore.jsx";
 import { useTheme } from "../../hooks/useTheme.js";
@@ -27,6 +27,14 @@ export default function SettingsView({ onToast, onAddCategory }) {
   const [editingCat, setEditingCat] = useState(null); // key being renamed
   const [catDraft, setCatDraft] = useState("");
   const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const [confirmWipe, setConfirmWipe] = useState(false);
+
+  const deleteAllData = () => {
+    dispatch({ type: "RESET" });
+    try { localStorage.removeItem("habitflow_data"); } catch (e) {}
+    setConfirmWipe(false);
+    onToast && onToast.info("All data deleted.");
+  };
 
   const enableReminders = async () => {
     const p = await requestNotificationPermission();
@@ -174,6 +182,41 @@ export default function SettingsView({ onToast, onAddCategory }) {
             ))}
           </div>
         )}
+      </Section>
+
+      <Section title="Danger zone">
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={18} className="text-[#D85A30] shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-ink dark:text-ink-dark font-medium">Delete all data</p>
+            <p className="text-xs text-ink-muted mt-0.5 leading-relaxed">
+              Permanently removes every habit, all your history, journal entries, categories, and settings.
+              This can't be undone.
+            </p>
+
+            {!confirmWipe ? (
+              <button onClick={() => setConfirmWipe(true)}
+                className="mt-3 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-[#D85A30] border border-[#D85A30]/40 hover:bg-[#D85A30]/10 transition-colors">
+                <Trash2 size={15} /> Delete all data
+              </button>
+            ) : (
+              <div className="mt-3 p-3 rounded-xl border border-[#D85A30]/40 bg-[#D85A30]/[0.06]">
+                <p className="text-sm text-ink dark:text-ink-dark font-medium">Are you absolutely sure?</p>
+                <p className="text-xs text-ink-muted mt-0.5">Everything will be erased and the app will start fresh.</p>
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => setConfirmWipe(false)}
+                    className="flex-1 py-2 rounded-lg text-sm font-medium text-ink-muted border border-black/[0.08] dark:border-white/[0.08] hover:bg-black/5 dark:hover:bg-white/10">
+                    Cancel
+                  </button>
+                  <button onClick={deleteAllData}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-[#D85A30] hover:opacity-90">
+                    Yes, delete everything
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </Section>
 
       <Section title="About">
