@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Check, ArrowRight, Plus, X } from "lucide-react";
 import Button from "../ui/Button.jsx";
-import { STARTER_PACKS, EMOJI_OPTIONS } from "../../utils/habitDefaults.js";
+import { STARTER_PACKS, EMOJI_OPTIONS, DEFAULT_HABITS } from "../../utils/habitDefaults.js";
 import { useHabits } from "../../hooks/useHabits.js";
 import { useStore } from "../../store/habitStore.jsx";
 
@@ -13,7 +13,7 @@ const slide = {
 };
 
 export default function OnboardingFlow() {
-  const { addHabits } = useHabits();
+  const { addHabits, habits } = useHabits();
   const { dispatch } = useStore();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
@@ -22,6 +22,7 @@ export default function OnboardingFlow() {
   const [adding, setAdding] = useState(false);   // inline add form open
   const [draftName, setDraftName] = useState("");
   const [draftEmoji, setDraftEmoji] = useState("🎯");
+  const committedRef = useRef(false);            // did the user add anything?
 
   // Step 3 auto-advance
   useEffect(() => {
@@ -48,11 +49,14 @@ export default function OnboardingFlow() {
   function commitPack() {
     const fromPacks = packs.flatMap((id) => STARTER_PACKS.find((p) => p.id === id)?.habits || []);
     const all = [...fromPacks, ...custom];
-    if (all.length) addHabits(all);
+    if (all.length) { addHabits(all); committedRef.current = true; }
     setStep(2);
   }
 
   function finish() {
+    // Never land on an empty app: if the user added nothing (e.g. skipped),
+    // seed 6 balanced defaults — one per category — so every section has content.
+    if (!committedRef.current && habits.length === 0) addHabits(DEFAULT_HABITS);
     dispatch({ type: "SET_USER", patch: { name: name.trim() || "friend", onboardingDone: true } });
   }
 

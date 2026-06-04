@@ -38,6 +38,17 @@ export const STARTER_PACKS = [
   },
 ];
 
+// 6 balanced default habits — one per category — seeded when a user finishes
+// onboarding without choosing anything, so the app is never empty.
+export const DEFAULT_HABITS = [
+  { name: "Drink water",        emoji: "💧", category: "health",       frequency: "daily", targetType: "number",   goal: 8, unit: "glasses" },
+  { name: "Meditate",           emoji: "🧘", category: "mindfulness",  frequency: "daily", targetType: "duration", goal: 10 },
+  { name: "Read",               emoji: "📚", category: "learning",     frequency: "daily", targetType: "duration", goal: 20 },
+  { name: "Workout",            emoji: "🏋️", category: "fitness",      frequency: "daily", targetType: "duration", goal: 30 },
+  { name: "Plan your day",      emoji: "🎯", category: "productivity", frequency: "daily", targetType: "none" },
+  { name: "Connect with someone", emoji: "💬", category: "social",     frequency: "daily", targetType: "none" },
+];
+
 export const EMOJI_OPTIONS = [
   "🧘", "💧", "📚", "🏃", "✍️", "🥗", "😴", "🎯",
   "💪", "🧠", "🎨", "🎵", "🌿", "🧹", "💊", "🏋️",
