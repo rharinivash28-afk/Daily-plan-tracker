@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://daily-plan-tracker.pages.dev/sitemap.xml

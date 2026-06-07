@@ -61,7 +61,7 @@ export default function OnboardingFlow() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center px-5 bg-bg-light dark:bg-bg-dark">
+    <main className="min-h-screen grid place-items-center px-5 bg-bg-light dark:bg-bg-dark">
       <div className="w-full max-w-md">
         {/* progress dots */}
         <div className="flex justify-center gap-2 mb-8">
@@ -199,6 +199,6 @@ export default function OnboardingFlow() {
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </main>
   );
 }
