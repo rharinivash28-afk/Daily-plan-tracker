@@ -4,3 +4,7 @@ dist
 *.local
 daily tracker.vfix/
 .env
+
+# stray screenshots
+authshot.png
+daily tracker*.png
