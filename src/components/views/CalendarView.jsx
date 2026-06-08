@@ -18,6 +18,13 @@ export default function CalendarView({ habits, weekStartsOn, journal, onToggle, 
   const cells = useMemo(() => getMonthGrid(year, month, weekStartsOn), [year, month, weekStartsOn]);
   const tKey = todayKey();
 
+  // Earliest day we have data for (account/first-habit start). Days before this
+  // or in the future shouldn't show a "0/N" count — that implies missed days.
+  const startKey = useMemo(() => {
+    const dates = habits.map((h) => (h.createdAt || "").slice(0, 10)).filter(Boolean);
+    return dates.length ? dates.sort()[0] : tKey;
+  }, [habits, tKey]);
+
   const prev = () => { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); };
   const next = () => { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); };
 
@@ -57,9 +64,12 @@ export default function CalendarView({ habits, weekStartsOn, journal, onToggle, 
         </div>
         <div className="grid grid-cols-7 gap-1.5">
           {cells.map((cell) => {
-            const { done, total } = dayCompletion(habits, cell.date);
+            // Only days from account start through today are "active" — past days
+            // before signup and future days don't show a count (would imply misses).
+            const inRange = cell.key >= startKey && cell.key <= tKey;
+            const { done, total } = inRange ? dayCompletion(habits, cell.date) : { done: 0, total: 0 };
             const ratio = total ? done / total : 0;
-            const fill = total && done ? (isDark ? heatmapColorDark(ratio) : heatmapColor(ratio)) : null;
+            const fill = inRange && total && done ? (isDark ? heatmapColorDark(ratio) : heatmapColor(ratio)) : null;
             const isToday = cell.key === tKey;
             const isSel = selected === cell.key;
             return (
@@ -70,7 +80,7 @@ export default function CalendarView({ habits, weekStartsOn, journal, onToggle, 
                 style={{ background: fill || "transparent", color: fill ? "#fff" : undefined }}
               >
                 <span className={`font-semibold ${!fill ? "text-ink dark:text-ink-dark" : ""} ${isToday && !fill ? "text-purple-600" : ""}`}>{cell.date.getDate()}</span>
-                {total > 0 && <span className={`text-[9px] ${fill ? "text-white/80" : "text-ink-hint"}`}>{done}/{total}</span>}
+                {inRange && total > 0 && <span className={`text-[9px] ${fill ? "text-white/80" : "text-ink-hint"}`}>{done}/{total}</span>}
               </button>
             );
           })}

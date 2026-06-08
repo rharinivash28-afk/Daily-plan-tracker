@@ -54,6 +54,14 @@ export default function AnalyticsView({ habits }) {
   const bestEver = active.reduce((m, h) => Math.max(m, getStreak(h)), 0);
   const avgDaily = lineData.length ? Math.round(lineData.reduce((a, b) => a + b.pct, 0) / lineData.length) : 0;
 
+  // Distinct days that have at least one completion — charts need a few to be useful.
+  const daysTracked = useMemo(() => {
+    const days = new Set();
+    active.forEach((h) => Object.keys(h.completions || {}).forEach((k) => { if (h.completions[k]) days.add(k); }));
+    return days.size;
+  }, [active]);
+  const enoughForCharts = daysTracked >= 3;
+
   if (!enoughData) {
     return (
       <div className="grid place-items-center text-center py-20">
@@ -74,6 +82,18 @@ export default function AnalyticsView({ habits }) {
         <StatCard icon={<Percent size={14} />} label="Avg daily" value={`${avgDaily}%`} />
       </div>
 
+      {!enoughForCharts && (
+        <div className="grid place-items-center text-center py-14 rounded-2xl border border-dashed border-black/[0.12] dark:border-white/[0.12]">
+          <Activity size={40} className="text-purple-400 mb-3" />
+          <p className="font-medium text-ink dark:text-ink-dark">Your charts are warming up</p>
+          <p className="text-sm text-ink-muted max-w-xs mt-1">
+            Track for a few days and your trends, best days, and habit performance will appear here.
+            {daysTracked > 0 && ` (${daysTracked} day${daysTracked === 1 ? "" : "s"} so far)`}
+          </p>
+        </div>
+      )}
+
+      {enoughForCharts && <>
       {/* Line */}
       <div className="p-5 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark">
         <h3 className="text-sm font-semibold text-ink dark:text-ink-dark mb-4">Last 30 days</h3>
@@ -126,6 +146,7 @@ export default function AnalyticsView({ habits }) {
           ))}
         </div>
       </div>
+      </>}
     </div>
   );
 }

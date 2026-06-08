@@ -24,6 +24,14 @@ export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, o
   const tKey = todayKey();
   const tDate = fromKey(tKey);
   const [focus, setFocus] = useState(false);
+  const [compact, setCompact] = useState(() => {
+    try { return localStorage.getItem("habitflow.compact") === "1"; } catch (e) { return false; }
+  });
+  const toggleCompact = () => setCompact((v) => {
+    const n = !v;
+    try { localStorage.setItem("habitflow.compact", n ? "1" : "0"); } catch (e) {}
+    return n;
+  });
   const [dismissedBanner, setDismissedBanner] = useState(false);
 
   const scheduled = useMemo(
@@ -119,8 +127,10 @@ export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, o
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-ink dark:text-ink-dark">Today's habits</h2>
-          <div className="flex items-center gap-2">
-            {focus && <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-600 text-white">Focus mode on</span>}
+          <div className="flex items-center gap-3">
+            <button onClick={toggleCompact} className="text-sm font-medium text-ink-muted hover:text-purple-600 hover:underline">
+              {compact ? "Comfortable" : "Compact"}
+            </button>
             <button onClick={() => setFocus((v) => !v)} className="text-sm font-medium text-purple-600 hover:underline">
               {focus ? "Exit focus" : "Focus mode"}
             </button>
@@ -136,7 +146,7 @@ export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, o
             {ordered.map((h) => (
               <HabitCard
                 key={h.id} habit={h} dateKey={tKey}
-                weekStartsOn={weekStartsOn}
+                weekStartsOn={weekStartsOn} compact={compact}
                 dimmed={focus && !focusIds.has(h.id)}
                 onToggle={onToggle} onSetTarget={onSetTarget} onSetActual={onSetActual} onSetValue={onSetValue}
                 onEdit={onEdit} onDelete={onDelete} onArchive={onArchive}

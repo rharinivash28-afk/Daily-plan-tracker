@@ -11,7 +11,7 @@ import { useStreak } from "../../hooks/useStreak.js";
 import { useTheme } from "../../hooks/useTheme.js";
 import { fromKey } from "../../utils/dates.js";
 
-export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSetActual, onSetValue, onEdit, onDelete, onArchive, dimmed, weekStartsOn }) {
+export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSetActual, onSetValue, onEdit, onDelete, onArchive, dimmed, weekStartsOn, compact }) {
   const { isDark } = useTheme();
   const c = catColors(habit.category, isDark);
   const { current: streak } = useStreak(habit);
@@ -32,14 +32,14 @@ export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSet
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: dimmed ? 0.4 : 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="group relative flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl border transition-colors"
+      className={`group relative flex items-center gap-3 sm:gap-4 rounded-2xl border transition-colors ${compact ? "p-2.5 sm:p-3" : "p-3 sm:p-4"}`}
       style={{
         background: done ? "rgba(127,119,221,0.05)" : "var(--card)",
         borderColor: "rgba(0,0,0,0.08)",
       }}
     >
       {/* emoji pill */}
-      <div className="w-10 h-10 rounded-xl grid place-items-center text-xl shrink-0" style={{ background: c.bg }}>
+      <div className={`rounded-xl grid place-items-center shrink-0 ${compact ? "w-8 h-8 text-base" : "w-10 h-10 text-xl"}`} style={{ background: c.bg }}>
         {habit.emoji}
       </div>
 
@@ -49,17 +49,24 @@ export default function HabitCard({ habit, dateKey, onToggle, onSetTarget, onSet
           <span className={`text-sm font-medium truncate text-ink dark:text-ink-dark transition-all ${done ? "line-through opacity-60" : ""}`}>
             {habit.name}
           </span>
+          {compact && (
+            <span className="text-xs text-ink-muted shrink-0">· {catLabel(habit.category)}</span>
+          )}
         </div>
-        <div className="text-xs text-ink-muted mt-0.5 truncate">
-          {catLabel(habit.category)}{habit.duration ? ` · ${habit.duration}` : ""}
-        </div>
+        {!compact && (
+          <div className="text-xs text-ink-muted mt-0.5 truncate">
+            {catLabel(habit.category)}{habit.duration ? ` · ${habit.duration}` : ""}
+          </div>
+        )}
         <TimeControl
           habit={habit} dateKey={dateKey} done={done}
           onSetTarget={onSetTarget} onSetActual={onSetActual} onSetValue={onSetValue}
         />
-        <div className="mt-2 hidden sm:block">
-          <HabitDots habit={habit} weekStartsOn={weekStartsOn} />
-        </div>
+        {!compact && (
+          <div className="mt-2 hidden sm:block">
+            <HabitDots habit={habit} weekStartsOn={weekStartsOn} />
+          </div>
+        )}
       </div>
 
       {/* streak badge */}
