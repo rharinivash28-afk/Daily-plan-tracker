@@ -40,6 +40,7 @@ export default defineConfig({
             if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler')) return 'react'
             if (id.includes('framer-motion')) return 'motion'
             if (id.includes('recharts') || id.includes('d3-') || id.includes('victory')) return 'charts'
+            if (id.includes('@supabase') || id.includes('supabase')) return 'supabase'
             if (id.includes('lucide-react')) return 'icons'
             if (id.includes('date-fns')) return 'dates'
             if (id.includes('canvas-confetti')) return 'confetti'

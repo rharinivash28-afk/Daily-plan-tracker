@@ -6,9 +6,12 @@ import { ToastProvider, useToast } from "./hooks/useToast.jsx";
 import { useHabits } from "./hooks/useHabits.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { useReminders } from "./hooks/useReminders.js";
+import { useAuth } from "./hooks/useAuth.js";
+import { useCloudSync } from "./hooks/useCloudSync.js";
 
 import AppShell from "./components/layout/AppShell.jsx";
 import OnboardingFlow from "./components/views/OnboardingFlow.jsx";
+import AuthScreen from "./components/views/AuthScreen.jsx";
 import TodayView from "./components/views/TodayView.jsx";
 import WeeklyView from "./components/views/WeeklyView.jsx";
 import StreaksView from "./components/views/StreaksView.jsx";
@@ -57,7 +60,7 @@ function MoreMenu({ setView }) {
   );
 }
 
-function AppInner() {
+function AppInner({ account, cloud, onSignOut }) {
   const { activeHabits, user, addHabit, updateHabit, deleteHabit, archiveHabit, toggle, setActualTime, setValue, addCategory } = useHabits();
   const { state } = useStore();
   const toast = useToast();
@@ -124,7 +127,7 @@ function AppInner() {
           {view === "streaks" && <StreaksView habits={filtered} />}
           {view === "analytics" && <Suspense fallback={<Loading />}><AnalyticsView habits={filtered} /></Suspense>}
           {view === "journal" && <Suspense fallback={<Loading />}><JournalView onToast={toast} /></Suspense>}
-          {view === "settings" && <SettingsView onToast={toast} onAddCategory={() => setCatModalOpen(true)} />}
+          {view === "settings" && <SettingsView onToast={toast} onAddCategory={() => setCatModalOpen(true)} account={account} cloud={cloud} onSignOut={onSignOut} />}
           {view === "more" && <MoreMenu setView={setView} />}
         </motion.div>
       </AnimatePresence>
@@ -156,11 +159,31 @@ function AppInner() {
   );
 }
 
+function Splash() {
+  return (
+    <main className="min-h-screen grid place-items-center bg-bg-light dark:bg-bg-dark">
+      <div className="w-11 h-11 rounded-full border-4 border-purple-200 border-t-purple-600 animate-spin" />
+    </main>
+  );
+}
+
+// Gates the app behind auth when cloud sync is enabled, and runs the sync.
+function Root() {
+  const auth = useAuth();
+  useCloudSync(auth.user); // no-op when cloud disabled or signed out
+
+  if (auth.cloud && auth.loading) return <Splash />;
+  if (auth.cloud && !auth.user) {
+    return <AuthScreen onSignIn={auth.signIn} onSignUp={auth.signUp} />;
+  }
+  return <AppInner account={auth.user} cloud={auth.cloud} onSignOut={auth.signOut} />;
+}
+
 export default function App() {
   return (
     <StoreProvider>
       <ToastProvider>
-        <AppInner />
+        <Root />
       </ToastProvider>
     </StoreProvider>
   );

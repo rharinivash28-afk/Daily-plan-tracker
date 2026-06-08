@@ -23,7 +23,7 @@ function Section({ title, children }) {
   );
 }
 
-export default function SettingsView({ onToast, onAddCategory }) {
+export default function SettingsView({ onToast, onAddCategory, account, cloud, onSignOut }) {
   const { state, dispatch } = useStore();
   const { isDark, toggle } = useTheme();
   const { habits, addCategory, renameCategory, deleteCategory, updateHabit, deleteHabit, setUser } = useHabits();
@@ -68,6 +68,20 @@ export default function SettingsView({ onToast, onAddCategory }) {
           <Button onClick={() => { dispatch({ type: "SET_USER", patch: { name: name.trim() || "friend" } }); onToast && onToast.success("Saved! ✨"); }}>Save</Button>
         </div>
       </Section>
+
+      {cloud && account && (
+        <Section title="Account">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm text-ink dark:text-ink-dark truncate">{account.email}</div>
+              <div className="flex items-center gap-1.5 text-xs text-[#1D9E75] mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75]" /> Synced to the cloud
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={onSignOut}>Sign out</Button>
+          </div>
+        </Section>
+      )}
 
       <Section title="Preferences">
         <div className="flex items-center justify-between py-1">

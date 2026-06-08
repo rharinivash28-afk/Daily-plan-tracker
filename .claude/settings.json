@@ -4,7 +4,10 @@
       "Bash(sed -i 's|div.grid.grid-cols-7 > button span.text-\\\\\\\\\\\\\\\\\\\\[9px\\\\\\\\\\\\\\\\\\\\]|div.grid.grid-cols-7 > button|' vfix.cjs)",
       "Bash(sed -i 's|const counts = await p.locator\\(.*\\).count\\(\\);|const counts = await p.evaluate\\(\\(\\)=>{const btns=[...document.querySelectorAll\\(\"div.grid.grid-cols-7 > button\"\\)];return btns.filter\\(b=>/\\\\\\\\d+\\\\\\\\/\\\\\\\\d+/.test\\(b.innerText\\)\\).length;}\\);|' vfix.cjs)",
       "Bash(node vfix.cjs)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(grep -q \"^\\\\.env$\" .gitignore)",
+      "Bash(echo \".env\")",
+      "Bash(node -e ' *)"
     ]
   }
 }
