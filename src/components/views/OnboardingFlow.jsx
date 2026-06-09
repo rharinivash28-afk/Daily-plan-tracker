@@ -22,6 +22,13 @@ export default function OnboardingFlow() {
   const [adding, setAdding] = useState(false);   // inline add form open
   const [draftName, setDraftName] = useState("");
   const [draftEmoji, setDraftEmoji] = useState("🎯");
+  const [draftCategory, setDraftCategory] = useState("health");
+  const CATS = [
+    { id: "health", label: "Health", emoji: "💪" },
+    { id: "mind", label: "Mind", emoji: "🧠" },
+    { id: "productivity", label: "Work", emoji: "💼" },
+    { id: "social", label: "Social", emoji: "🤝" },
+  ];
   const committedRef = useRef(false);            // did the user add anything?
 
   // Step 3 auto-advance
@@ -37,8 +44,8 @@ export default function OnboardingFlow() {
 
   const addCustom = () => {
     if (!draftName.trim()) return;
-    setCustom((prev) => [...prev, { name: draftName.trim(), emoji: draftEmoji, category: "health", frequency: "daily" }]);
-    setDraftName(""); setDraftEmoji("🎯"); setAdding(false);
+    setCustom((prev) => [...prev, { name: draftName.trim(), emoji: draftEmoji, category: draftCategory, frequency: "daily" }]);
+    setDraftName(""); setDraftEmoji("🎯"); setDraftCategory("health"); setAdding(false);
   };
 
   const totalSelected = packs.reduce((n, id) => {
@@ -140,7 +147,7 @@ export default function OnboardingFlow() {
 
                 {/* inline add form / + button */}
                 {adding ? (
-                  <div className="p-3 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark">
+                  <div className="p-3 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark space-y-2">
                     <div className="flex items-center gap-2">
                       <input
                         autoFocus value={draftName} onChange={(e) => setDraftName(e.target.value)}
@@ -148,13 +155,21 @@ export default function OnboardingFlow() {
                         placeholder="e.g. Stretch for 5 minutes"
                         className="flex-1 px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/[0.08] bg-bg-light dark:bg-bg-dark text-ink dark:text-ink-dark text-sm focus:outline-none focus:ring-2 ring-accent"
                       />
-                      <button onClick={addCustom} className="px-3 py-2 rounded-xl text-sm font-semibold text-white bg-accent">Add</button>
+                      <button onClick={addCustom} className="px-3 py-2 rounded-xl text-sm font-semibold text-white bg-accent">Add habit</button>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1">
                       {EMOJI_OPTIONS.slice(0, 12).map((e) => (
                         <button key={e} onClick={() => setDraftEmoji(e)}
                           className={`w-8 h-8 grid place-items-center rounded-lg text-lg ${draftEmoji === e ? "bg-accent-soft ring-1 ring-accent" : "hover:bg-black/5 dark:hover:bg-white/10"}`}>
                           {e}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {CATS.map((c) => (
+                        <button key={c.id} onClick={() => setDraftCategory(c.id)}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${draftCategory === c.id ? "bg-accent text-white border-accent" : "border-black/10 dark:border-white/15 text-ink-muted hover:border-accent"}`}>
+                          {c.emoji} {c.label}
                         </button>
                       ))}
                     </div>

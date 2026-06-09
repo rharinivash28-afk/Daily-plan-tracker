@@ -115,7 +115,12 @@ export default function TodayView({ habits, weekStartsOn, name, onAdd, onEdit, o
 
       {/* hero card */}
       <div className="p-5 sm:p-6 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark flex flex-col sm:flex-row items-center gap-6">
-        <ProgressRing pct={pct} />
+        <div className="flex flex-col items-center gap-1">
+          <ProgressRing pct={pct} />
+          <span className="text-xs font-medium text-ink-muted mt-1">
+            {pct === 0 ? "Let's go! 💪" : pct === 100 ? "All done! 🎉" : `${pct}% done`}
+          </span>
+        </div>
         <div className="flex-1 grid grid-cols-1 gap-2.5 w-full">
           <StatPill icon="🔥" label="Best streak" value={`${bestStreak} day${bestStreak === 1 ? "" : "s"}`} />
           <StatPill icon="✅" label="Today" value={`${done} of ${total} done`} />

@@ -35,22 +35,31 @@ function Loading() {
 
 function MoreMenu({ setView }) {
   const items = [
-    { id: "calendar", label: "Calendar", icon: CalendarDays },
-    { id: "streaks", label: "Streaks", icon: Flame },
-    { id: "journal", label: "Journal", icon: BookOpen },
-    { id: "analytics", label: "Analytics", icon: BarChart2 },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
+    { id: "calendar", label: "Calendar", desc: "View by month", icon: CalendarDays, gradient: "from-blue-500 to-indigo-500" },
+    { id: "streaks", label: "Streaks", desc: "Track your fire", icon: Flame, gradient: "from-orange-400 to-red-500" },
+    { id: "journal", label: "Journal", desc: "Reflect & write", icon: BookOpen, gradient: "from-emerald-400 to-teal-500" },
+    { id: "analytics", label: "Analytics", desc: "See your trends", icon: BarChart2, gradient: "from-purple-500 to-violet-600" },
+    { id: "settings", label: "Settings", desc: "Customise the app", icon: SettingsIcon, gradient: "from-slate-400 to-slate-600" },
   ];
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <h1 className="text-2xl font-bold text-ink dark:text-ink-dark">More</h1>
       <div className="grid grid-cols-2 gap-3">
-        {items.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => setView(id)}
-            className="p-5 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-card-light dark:bg-card-dark flex flex-col items-center gap-2 text-ink dark:text-ink-dark">
-            <Icon size={24} className="text-purple-600" />
-            <span className="text-sm font-medium">{label}</span>
-          </button>
+        {items.map(({ id, label, desc, icon: Icon, gradient }) => (
+          <motion.button
+            key={id} onClick={() => setView(id)}
+            whileTap={{ scale: 0.96 }}
+            className="relative overflow-hidden p-5 rounded-2xl flex flex-col items-start gap-3 text-left shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-10 dark:opacity-20`} />
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center`}>
+              <Icon size={20} className="text-white" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-ink dark:text-ink-dark">{label}</div>
+              <div className="text-xs text-ink-muted mt-0.5">{desc}</div>
+            </div>
+          </motion.button>
         ))}
       </div>
     </div>

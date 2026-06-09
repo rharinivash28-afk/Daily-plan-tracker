@@ -83,13 +83,23 @@ export default function AnalyticsView({ habits }) {
       </div>
 
       {!enoughForCharts && (
-        <div className="grid place-items-center text-center py-14 rounded-2xl border border-dashed border-black/[0.12] dark:border-white/[0.12]">
-          <Activity size={40} className="text-purple-400 mb-3" />
-          <p className="font-medium text-ink dark:text-ink-dark">Your charts are warming up</p>
-          <p className="text-sm text-ink-muted max-w-xs mt-1">
-            Track for a few days and your trends, best days, and habit performance will appear here.
-            {daysTracked > 0 && ` (${daysTracked} day${daysTracked === 1 ? "" : "s"} so far)`}
+        <div className="grid place-items-center text-center py-12 px-6 rounded-2xl border border-dashed border-black/[0.12] dark:border-white/[0.12]">
+          <div className="w-14 h-14 rounded-full bg-purple-50 dark:bg-purple-900/20 grid place-items-center mb-4">
+            <Activity size={28} className="text-purple-500" />
+          </div>
+          <p className="font-semibold text-ink dark:text-ink-dark">Charts unlock after 3 days</p>
+          <p className="text-sm text-ink-muted max-w-xs mt-1.5">
+            Keep checking off habits — your trends, best days, and performance graphs will appear here once you have a few days of data.
           </p>
+          {daysTracked > 0 && (
+            <div className="mt-4 flex items-center gap-3">
+              {[1,2,3].map((n) => (
+                <div key={n} className={`w-8 h-8 rounded-full grid place-items-center text-sm font-bold border-2 transition-all ${daysTracked >= n ? "bg-purple-600 border-purple-600 text-white" : "border-black/15 dark:border-white/20 text-ink-hint"}`}>
+                  {daysTracked >= n ? "✓" : n}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -85,30 +85,53 @@ export default function CalendarView({ habits, weekStartsOn, journal, onToggle, 
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-ink-muted">Tap any date to see and edit that day's plan.</p>
+        {!selected && <p className="mt-3 text-xs text-ink-muted text-center">Tap any date to see and edit that day's plan.</p>}
       </div>
 
-      {/* slide-in side panel */}
-      <AnimatePresence>
+      {/* inline day panel below calendar on mobile, slide-in on desktop */}
+      <AnimatePresence mode="wait">
         {selected && !full && (
-          <motion.div className="fixed inset-0 z-50 flex justify-end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
-            <motion.aside
-              className="relative w-full max-w-md h-full bg-bg-light dark:bg-bg-dark overflow-y-auto"
-              initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+          <>
+            {/* desktop: slide-in drawer */}
+            <motion.div className="hidden md:flex fixed inset-0 z-50 justify-end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
+              <motion.aside
+                className="relative w-full max-w-md h-full bg-bg-light dark:bg-bg-dark overflow-y-auto"
+                initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              >
+                <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur border-b border-black/[0.06] dark:border-white/[0.08]">
+                  <button onClick={() => setFull(true)} className="flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline" title="Open full screen">
+                    <Maximize2 size={15} /> Full view
+                  </button>
+                  <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-ink-muted hover:bg-black/5 dark:hover:bg-white/10"><X size={18} /></button>
+                </div>
+                <div className="p-5">
+                  <DayPlanPanel dateKey={selected} {...panelProps} />
+                </div>
+              </motion.aside>
+            </motion.div>
+
+            {/* mobile: inline panel below calendar */}
+            <motion.div
+              className="md:hidden"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25 }}
             >
-              <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-bg-light/90 dark:bg-bg-dark/90 backdrop-blur border-b border-black/[0.06] dark:border-white/[0.08]">
-                <button onClick={() => setFull(true)} className="flex items-center gap-1.5 text-sm font-medium text-purple-600 hover:underline" title="Open full screen">
-                  <Maximize2 size={15} /> Full view
-                </button>
-                <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-ink-muted hover:bg-black/5 dark:hover:bg-white/10"><X size={18} /></button>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-ink dark:text-ink-dark">
+                  {new Date(selected + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setFull(true)} className="flex items-center gap-1 text-xs font-medium text-purple-600 hover:underline">
+                    <Maximize2 size={13} /> Expand
+                  </button>
+                  <button onClick={() => setSelected(null)} className="p-1 rounded-lg text-ink-muted hover:bg-black/5 dark:hover:bg-white/10"><X size={16} /></button>
+                </div>
               </div>
-              <div className="p-5">
-                <DayPlanPanel dateKey={selected} {...panelProps} />
-              </div>
-            </motion.aside>
-          </motion.div>
+              <DayPlanPanel dateKey={selected} {...panelProps} />
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
